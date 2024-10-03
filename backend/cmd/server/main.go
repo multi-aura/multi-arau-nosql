@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	config "electronik/internal/configs/dev"
-	"electronik/internal/databases"
-	"electronik/routes"
+	config "multiaura/internal/configs/dev"
+	"multiaura/internal/databases"
+	"multiaura/routes"
 	"fmt"
 	"log"
 	"os"

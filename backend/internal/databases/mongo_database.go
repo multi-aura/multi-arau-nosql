@@ -2,7 +2,7 @@ package databases
 
 import (
 	"context"
-	config "electronik/internal/configs/dev"
+	config "multiaura/internal/configs/dev"
 	"log"
 	"time"
 

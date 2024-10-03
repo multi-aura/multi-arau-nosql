@@ -1,8 +1,8 @@
 package services
 
 import (
-	"electronik/internal/models"
-	"electronik/internal/repositories"
+	"multiaura/internal/models"
+	"multiaura/internal/repositories"
 	"errors"
 
 	"golang.org/x/crypto/bcrypt"

@@ -2,8 +2,8 @@ package repositories
 
 import (
 	"context"
-	"electronik/internal/databases"
-	"electronik/internal/models"
+	"multiaura/internal/databases"
+	"multiaura/internal/models"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"

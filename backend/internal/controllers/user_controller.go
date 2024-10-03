@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"electronik/internal/models"
-	"electronik/internal/services"
-	APIResponse "electronik/pkg/api_response"
-	"electronik/pkg/jwt"
+	"multiaura/internal/models"
+	"multiaura/internal/services"
+	APIResponse "multiaura/pkg/api_response"
+	"multiaura/pkg/jwt"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"

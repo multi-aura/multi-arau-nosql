@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"electronik/internal/controllers"
-	"electronik/internal/repositories"
-	"electronik/internal/services"
+	"multiaura/internal/controllers"
+	"multiaura/internal/repositories"
+	"multiaura/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
 

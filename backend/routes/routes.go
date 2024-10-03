@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"electronik/internal/databases"
+	"multiaura/internal/databases"
 
 	"github.com/gofiber/fiber/v2"
 )

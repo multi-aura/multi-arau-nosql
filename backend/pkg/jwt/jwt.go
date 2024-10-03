@@ -1,7 +1,7 @@
 package jwt
 
 import (
-	"electronik/internal/models"
+	"multiaura/internal/models"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"

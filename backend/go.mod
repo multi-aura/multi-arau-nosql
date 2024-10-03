@@ -1,4 +1,4 @@
-module electronik
+module multiaura
 
 go 1.23.1
 
