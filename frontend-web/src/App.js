@@ -6,6 +6,10 @@ function App() {
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
+        <div className="container">
+          <h1 className="text-center">Hello, Bootstrap in React!</h1>
+          <button className="btn btn-dark">Click me</button>
+        </div>
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
@@ -23,3 +27,4 @@ function App() {
 }
 
 export default App;
+
