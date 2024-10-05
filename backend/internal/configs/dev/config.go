@@ -2,34 +2,51 @@ package config
 
 import (
 	"log"
+	"sync"
 
 	"github.com/spf13/viper"
 )
 
+var (
+	instance *Config
+	once     sync.Once
+)
+
 type Config struct {
-	Mongo MongoConfig
+	Neo4j     Neo4jConfig
+	SecretKey string
 }
 
-type MongoConfig struct {
+type Neo4jConfig struct {
 	URI      string
-	Database string
+	Username string
+	Password string
 }
 
-func LoadConfig() (*Config, error) {
-	viper.SetConfigName("config")                 // Tên file là "config"
-	viper.SetConfigType("yaml")                   // Định dạng YAML
-	viper.AddConfigPath("./internal/configs/dev") // Đường dẫn đến folder chứa file config
+func Instance() (*Config, error) {
+	var err error
+	once.Do(func() {
+		viper.SetConfigName("config")                 // Tên file là "config"
+		viper.SetConfigType("yaml")                   // Định dạng YAML
+		viper.AddConfigPath("./internal/configs/dev") // Đường dẫn đến folder chứa file config
 
-	err := viper.ReadInConfig()
-	if err != nil {
-		return nil, err
-	}
+		err = viper.ReadInConfig()
+		if err != nil {
+			err = log.Output(2, "unable to read config: "+err.Error())
+			return
+		}
 
-	var config Config
-	err = viper.Unmarshal(&config)
-	if err != nil {
-		log.Fatalf("unable to decode into struct, %v", err)
-	}
+		instance = &Config{}
+		err = viper.Unmarshal(instance)
+		if err != nil {
+			err = log.Output(2, "unable to decode into struct: "+err.Error())
+		}
+	})
 
-	return &config, nil
+	return instance, err
+}
+
+// GetSecretKey trả về SecretKey
+func (cfg *Config) GetSecretKey() string {
+	return cfg.SecretKey
 }

@@ -1,21 +1,23 @@
 package services
 
 import (
+	"errors"
 	"multiaura/internal/models"
 	"multiaura/internal/repositories"
-	"errors"
+	"multiaura/pkg/utils"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {
-	Register(user *models.User) error
-	Login(email string) (*models.User, error)
+	Register(req *models.RegisterRequest) error
+	Login(email string, password string) (*models.User, error)
 	Logout(userID string) error
 	DeleteAccount(userID string) error
-	Update(userID string, user *models.User) error
+	Update(userMap *map[string]interface{}) error
 	ForgotPassword(email string) error
 	ChangePassword(userID, oldPassword, newPassword string) error
+	ComparePassword(hashedPassword string, plainPassword string) error
 }
 
 type userService struct {
@@ -26,60 +28,127 @@ func NewUserService(repo repositories.UserRepository) UserService {
 	return &userService{repo}
 }
 
-func (s *userService) Register(user *models.User) error {
-	// Hash the password before saving
+// Register a new user
+func (s *userService) Register(req *models.RegisterRequest) error {
+	if req.Email == "" {
+		return errors.New("email is required")
+	}
+	if req.FullName == "" {
+		return errors.New("fullname is required")
+	}
+	if req.Password == "" {
+		return errors.New("password is required")
+	}
+	if req.PhoneNumber == "" {
+		return errors.New("phonenumber is required")
+	}
+
+	reqMap, err := utils.StructToMap(req)
+	if err != nil {
+		return errors.New("failed to convert request to map")
+	}
+	user := &models.User{}
+	user, err = user.FromMap(reqMap)
+	if err != nil {
+		return errors.New("failed to convert to User")
+	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return errors.New("failed to hash password")
+	}
+	user.Password = string(hashedPassword)
+
+	err = s.repo.Create(*user)
 	if err != nil {
 		return err
 	}
-	user.Password = string(hashedPassword)
-	return s.repo.Create(*user)
+
+	return nil
 }
 
-func (s *userService) Login(email string) (*models.User, error) {
+// Login a user by email
+func (s *userService) Login(email string, password string) (*models.User, error) {
 	user, err := s.repo.GetUserByEmail(email)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("invalid email")
 	}
-	return &user, nil
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return nil, errors.New("invalid password")
+	}
+
+	return user, nil
+}
+
+func (s *userService) ComparePassword(hashedPassword string, plainPassword string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(plainPassword))
+	if err != nil {
+		return errors.New("invalid password")
+	}
+	return nil
 }
 
 func (s *userService) Logout(userID string) error {
-	// Implement logout logic, such as invalidating tokens, if applicable
 	return nil
 }
 
+// Delete a user account
 func (s *userService) DeleteAccount(userID string) error {
-	return s.repo.Delete(userID) // Gọi phương thức Delete trong UserRepository
+	existingUser, err := s.repo.GetByID(userID)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	if userID != existingUser.ID {
+		return errors.New("user ID does not match")
+	}
+	return s.repo.Delete(userID)
 }
 
-func (s *userService) Update(userID string, user *models.User) error {
-	// Update user information. Ensure that the user ID matches.
-	return s.repo.Update(userID, *user) // Gọi phương thức Update trong UserRepository
-}
+// Update a user's information
+func (s *userService) Update(userMap *map[string]interface{}) error {
+	userID := (*userMap)["user_id"].(string)
+	existingUser, err := s.repo.GetByID(userID)
+	if err != nil {
+		return errors.New("user not found")
+	}
 
-func (s *userService) ForgotPassword(email string) error {
-	// Implement password recovery logic, such as sending a reset link or code via email.
-	// This is a placeholder for the actual implementation.
+	if userID != existingUser.ID {
+		return errors.New("user ID does not match")
+	}
+
+	if err := s.repo.Update(userMap); err != nil {
+		return errors.New("failed to update user information")
+	}
+
 	return nil
 }
 
-func (s *userService) ChangePassword(userID, oldPassword, newPassword string) error {
-	user, err := s.repo.GetByID(userID) // Sử dụng GetByID từ UserRepository
-	if err != nil {
-		return err
-	}
-	// if user == (models.User{}) {
-	// 	return errors.New("user not found")
-	// }
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword)); err != nil {
-		return errors.New("invalid old password")
-	}
+// ForgotPassword
+func (s *userService) ForgotPassword(email string) error {
+	return nil
+}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-	user.Password = string(hashedPassword)
-	return s.repo.Update(userID, user) // Cập nhật lại mật khẩu
+// Change a user's password
+func (s *userService) ChangePassword(userID, oldPassword, newPassword string) error {
+	// user, err := s.repo.GetByID(userID)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// // Check if the old password matches
+	// if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword)); err != nil {
+	// 	return errors.New("invalid old password")
+	// }
+
+	// // Hash the new password
+	// hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// // Update password in the database
+	// user.Password = string(hashedPassword)
+	// return s.repo.Update(*user)
+	return errors.New("can not change password")
 }

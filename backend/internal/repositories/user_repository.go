@@ -2,134 +2,275 @@ package repositories
 
 import (
 	"context"
+	"errors"
+	"log"
 	"multiaura/internal/databases"
 	"multiaura/internal/models"
-	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/google/uuid"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type UserRepository interface {
-	Repository[models.User] // Nhúng interface chung
-	// Các phương thức cụ thể cho UserRepository
+	Repository[models.User]
 	GetUsersByName(name string) ([]models.User, error)
-	GetUserByEmail(email string) (models.User, error)
+	GetUserByEmail(email string) (*models.User, error)
+	GetUserByPhone(phone string) (*models.User, error)
 }
 
-// Tạo một struct cụ thể cho User
 type userRepository struct {
-	db         *databases.MongoDB
-	collection *mongo.Collection
+	db *databases.Neo4jDB
 }
 
-func NewUserRepository(db *databases.MongoDB) UserRepository {
-	// Sử dụng collection "users" cho MongoDB
-	return &userRepository{
-		db:         db,
-		collection: db.Database.Collection("users"),
-	}
+func NewUserRepository(db *databases.Neo4jDB) UserRepository {
+	return &userRepository{db: db}
 }
 
-// Cài đặt các phương thức từ interface
-func (repo *userRepository) GetByID(id string) (models.User, error) {
-	var user models.User
-	filter := bson.M{"_id": id}
+func (repo *userRepository) GetByID(id string) (*models.User, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
 
-	err := repo.collection.FindOne(context.Background(), filter).Decode(&user)
+	result, err := session.Run(ctx, "MATCH (u:User {user_id: $user_id, isActive: true}) RETURN u", map[string]interface{}{
+		"user_id": id,
+	})
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return models.User{}, nil // Không tìm thấy tài liệu
+		return nil, err
+	}
+
+	if result.Next(ctx) {
+		record := result.Record()
+		node, found := record.Get("u")
+		if !found {
+			return nil, errors.New("user not found")
 		}
-		return models.User{}, err // Trả về lỗi nếu có
+
+		userNode := node.(neo4j.Node)
+		user := &models.User{}
+		user, err := user.FromMap(userNode.Props)
+		if err != nil {
+			return nil, errors.New("error converting map to User")
+		}
+		return user, nil
 	}
 
-	return user, nil
+	return nil, errors.New("user with id " + id + " not found")
 }
 
-func (repo *userRepository) Create(entity models.User) error {
-	_, err := repo.collection.InsertOne(context.Background(), entity)
-	return err
-}
-
-func (repo *userRepository) Update(id string, entity models.User) error {
-	filter := bson.M{"_id": id}
-	update := bson.M{
-		"$set": entity,
+func (repo *userRepository) Create(user models.User) error {
+	existsEmail, _ := repo.GetUserByEmail(user.Email)
+	if existsEmail != nil {
+		return errors.New("email already exists")
 	}
 
-	result, err := repo.collection.UpdateOne(context.Background(), filter, update)
+	existsPhone, _ := repo.GetUserByPhone(user.PhoneNumber)
+	if existsPhone != nil {
+		return errors.New("phone already exists")
+	}
+
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	tx, err := session.BeginTransaction(ctx)
 	if err != nil {
 		return err
 	}
-	if result.MatchedCount == 0 {
-		return mongo.ErrNoDocuments // Không tìm thấy tài liệu để cập nhật
+	defer tx.Close(ctx)
+
+	user.ID = uuid.NewString()
+	user.IsActive = true
+	_, err = tx.Run(ctx,
+		"CREATE (u:User) SET u = $userProps",
+		map[string]interface{}{
+			"userProps": user.ToMap(),
+		},
+	)
+	if err != nil {
+		_ = tx.Rollback(ctx)
+		return err
 	}
 
-	return nil
+	return tx.Commit(ctx)
+}
+
+func (repo *userRepository) Update(entityMap *map[string]interface{}) error {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	tx, err := session.BeginTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Close(ctx)
+
+	userID := (*entityMap)["user_id"].(string)
+
+	userProps := make(map[string]interface{})
+
+	for key, value := range *entityMap {
+		if key != "user_id" { // Không thêm user_id vào userProps
+			userProps[key] = value
+		}
+	}
+
+	result, err := tx.Run(ctx,
+		"MATCH (u:User {user_id: $user_id}) SET u += $userProps RETURN u",
+		map[string]interface{}{
+			"user_id":   userID,
+			"userProps": userProps,
+		},
+	)
+
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	}
+
+	if !result.Next(ctx) {
+		return errors.New("user with id " + userID + " not found")
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (repo *userRepository) Delete(id string) error {
-	filter := bson.M{"_id": id}
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
 
-	result, err := repo.collection.DeleteOne(context.Background(), filter)
+	tx, err := session.BeginTransaction(ctx)
 	if err != nil {
 		return err
 	}
-	if result.DeletedCount == 0 {
-		return mongo.ErrNoDocuments // Không tìm thấy tài liệu để xóa
+	defer tx.Close(ctx)
+
+	result, err := tx.Run(ctx,
+		"MATCH (u:User {user_id: $user_id}) SET u.isActive = false RETURN u",
+		map[string]interface{}{
+			"user_id": id,
+		},
+	)
+	if err != nil {
+		return err
 	}
 
-	return nil
+	summary, err := result.Consume(ctx)
+	if err != nil {
+		return err
+	}
+
+	if summary.Counters().PropertiesSet() == 0 {
+		return errors.New("user with id " + id + " not found")
+	}
+
+	return tx.Commit(ctx)
 }
 
-// Cài đặt phương thức cụ thể GetUsersByName
 func (repo *userRepository) GetUsersByName(name string) ([]models.User, error) {
-	var users []models.User
-	filter := bson.M{"username": bson.M{"$regex": name, "$options": "i"}} // Tìm kiếm theo tên với regex
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
 
-	cursor, err := repo.collection.Find(context.Background(), filter)
+	result, err := session.Run(ctx,
+		"MATCH (u:User) WHERE u.username CONTAINS $name RETURN u",
+		map[string]interface{}{
+			"name": name,
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(context.Background())
 
-	for cursor.Next(context.Background()) {
-		var user models.User
-		if err := cursor.Decode(&user); err != nil {
-			return nil, err
+	var users []models.User
+	for result.Next(ctx) {
+		record := result.Record()
+		node, found := record.Get("u")
+		if !found {
+			continue
 		}
-		users = append(users, user)
+
+		userNode := node.(neo4j.Node)
+		user := &models.User{}
+		user, err := user.FromMap(userNode.Props)
+		if err != nil {
+			return nil, errors.New("error converting map to User")
+		}
+		users = append(users, *user)
 	}
 
-	if err := cursor.Err(); err != nil {
-		return nil, err
+	if len(users) == 0 {
+		return nil, errors.New("no users found with the name " + name)
 	}
 
 	return users, nil
 }
 
-// Cài đặt phương thức GetUserByEmail
-func (repo *userRepository) GetUserByEmail(email string) (models.User, error) {
-	var user models.User
+func (repo *userRepository) GetUserByEmail(email string) (*models.User, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
 
-	// Tạo context để tìm kiếm với thời gian chờ
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// Tạo bộ lọc để tìm kiếm theo email
-	filter := bson.M{"email": email}
-
-	// Tìm người dùng với bộ lọc
-	err := repo.collection.FindOne(ctx, filter).Decode(&user)
+	result, err := session.Run(ctx,
+		"MATCH (u:User {email: $email}) RETURN u",
+		map[string]interface{}{
+			"email": email,
+		},
+	)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			// Không tìm thấy người dùng nào với email này
-			return models.User{}, nil
-		}
-		// Có lỗi khác khi truy vấn
-		return models.User{}, err
+		return nil, err
 	}
 
-	return user, nil
+	if result.Next(ctx) {
+		record := result.Record()
+		node, found := record.Get("u")
+		if !found {
+			return nil, errors.New("user not found")
+		}
+
+		userNode := node.(neo4j.Node)
+		user := &models.User{}
+		user, err := user.FromMap(userNode.Props)
+		if err != nil {
+			return nil, errors.New("error converting map to User")
+		}
+		return user, nil
+	}
+
+	return nil, errors.New("user with email " + email + " not found")
+}
+
+func (repo *userRepository) GetUserByPhone(phone string) (*models.User, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
+
+	result, err := session.Run(ctx,
+		"MATCH (u:User {phone: $phone}) RETURN u",
+		map[string]interface{}{
+			"phone": phone,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Next(ctx) {
+		record := result.Record()
+		node, found := record.Get("u")
+		if !found {
+			return nil, errors.New("user not found")
+		}
+
+		userNode := node.(neo4j.Node)
+		user := &models.User{}
+		user, err := user.FromMap(userNode.Props)
+		if err != nil {
+			return nil, errors.New("error converting map to User")
+		}
+		return user, nil
+	}
+
+	return nil, errors.New("user with phone " + phone + " not found")
 }
