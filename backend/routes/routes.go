@@ -10,5 +10,6 @@ var neo4jDB *databases.Neo4jDB
 
 func SetupRoutes(app *fiber.App) {
 	neo4jDB = databases.Instance()
-	setupUserRoutes(app)
+	SetupUserRoutes(app)
+	SetupRelationshipRoutes(app)
 }

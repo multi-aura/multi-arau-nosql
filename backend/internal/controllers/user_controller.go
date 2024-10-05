@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"log"
 	"multiaura/internal/models"
 	"multiaura/internal/services"
 	APIResponse "multiaura/pkg/api_response"
@@ -131,7 +130,6 @@ func (uc *UserController) UpdateUser(c *fiber.Ctx) error {
 
 	// Phân tích JSON vào map
 	if err := c.BodyParser(&updatedData); err != nil {
-		log.Println("Body:", string(c.Body()))
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Cannot parse JSON",
 		})
