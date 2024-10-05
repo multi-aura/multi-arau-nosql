@@ -1,10 +1,10 @@
 package main
 
 import (
-	"context"
 	config "multiaura/internal/configs/dev"
 	"multiaura/internal/databases"
 	"multiaura/routes"
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -20,18 +20,18 @@ func main() {
 	app := fiber.New()
 
 	// Nạp cấu hình từ file config.yaml
-	cfg, err := config.LoadConfig()
+	cfg, err := config.Instance()
 	if err != nil {
 		log.Fatalf("Could not load config: %v", err)
 	}
 
-	// Tạo kết nối MongoDB với cấu hình đã nạp
-	DB, err := databases.NewMongoDB(&cfg.Mongo)
+	// Tạo kết nối Neo4j với cấu hình đã nạp
+	DB, err := databases.NewNeo4jDB(&cfg.Neo4j)
 	if err != nil {
-		log.Fatalf("Could not connect to MongoDB: %v", err)
+		log.Fatalf("Could not connect to Neo4j: %v", err)
 	}
 
-	fmt.Println("Connected to MongoDB successfully!")
+	fmt.Println("Connected to Neo4j successfully!")
 
 	// Thiết lập các route
 	routes.SetupRoutes(app)
@@ -60,9 +60,9 @@ func main() {
 		log.Fatalf("Error shutting down server: %v", err)
 	}
 
-	// Sau khi Fiber đã dừng, ngắt kết nối với MongoDB
-	fmt.Println("Disconnecting from MongoDB...")
+	// Sau khi Fiber đã dừng, ngắt kết nối với Neo4j
+	fmt.Println("Disconnecting from Neo4j...")
 	DB.Disconnect()
 
-	fmt.Println("Server shutdown and MongoDB disconnected successfully")
+	fmt.Println("Server shutdown and Neo4j disconnected successfully")
 }

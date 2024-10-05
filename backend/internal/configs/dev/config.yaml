@@ -1,3 +1,6 @@
-mongo:
-  uri: "mongodb+srv://trongthang412003:uUptQfnTQeGgRiSF@cluster0.0u3du.mongodb.net/"
-  database: "Electronik"
+neo4j:
+  uri: "neo4j+s://28868218.databases.neo4j.io"
+  username: "neo4j"
+  password: "vygukgD8_zrf22hIYn37rd4Fg82tdy-JPJmwRb-s3cE"
+
+secretKey: "multiaura"
