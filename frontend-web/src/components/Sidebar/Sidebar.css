@@ -1,22 +1,37 @@
 .sidebar {
-    width: 200px;
-    background-color: #fff;
-    padding: 20px;
-    height: 100vh;
-    border-right: 1px solid #ddd;
-  }
-  
-  .sidebar h2 {
-    margin-bottom: 20px;
-  }
-  
-  .sidebar ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .sidebar ul li {
-    margin: 15px 0;
-    cursor: pointer;
-  }
-  
+  height: 100vh;
+  position: fixed;
+  background-color: #000; 
+  color: #fff;
+  margin-right: 0px;
+  border-right: 1px solid #ddd;
+}
+
+.tab-link {
+  display: flex;
+  align-items: center;
+  padding: 10px 40px;
+  color: #fff; 
+  width: 100%;
+  text-decoration: none; 
+}
+
+.tab-link i, 
+.tab-link svg {
+  margin-right: 10px;
+  color: #fff; 
+}
+
+.tab-link:hover {
+  background-color: #fff;
+  color: #000; 
+}
+
+.tab-link:hover svg {
+  color: #000; 
+}
+
+.tab-link.active {
+  background-color: #fff; 
+  color: #000;
+}
