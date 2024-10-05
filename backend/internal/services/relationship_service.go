@@ -50,15 +50,85 @@ func (s *relationshipService) Follow(targetUserID, userID string) error {
 }
 
 func (s *relationshipService) UnFollow(targetUserID, userID string) error {
-	panic("unimplemented")
+	existingUser, err := s.repo.GetByID(userID)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	if userID != existingUser.ID {
+		return errors.New("user ID does not match")
+	}
+
+	isFollowing, err := s.repo.IsFollowingOrFriend(targetUserID, userID)
+	if err != nil {
+		return errors.New("failed to check follow status")
+	}
+
+	if !isFollowing {
+		return errors.New("user is not following or friend with target user")
+	}
+
+	err = s.repo.UnFollow(targetUserID, userID)
+	if err != nil {
+		return errors.New("failed to unfollow")
+	}
+
+	return nil
 }
 
+
 func (s *relationshipService) Block(targetUserID, userID string) error {
-	panic("unimplemented")
+	existingUser, err := s.repo.GetByID(userID)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	if userID != existingUser.ID {
+		return errors.New("user ID does not match")
+	}
+
+	isBlocked, err := s.repo.IsBlocked(targetUserID, userID)
+	if err != nil {
+		return errors.New("failed to check block status")
+	}
+
+	if isBlocked {
+		return errors.New("user already blocked")
+	}
+
+	err = s.repo.Block(targetUserID, userID)
+	if err != nil {
+		return errors.New("failed to block user")
+	}
+
+	return nil
 }
 
 func (s *relationshipService) UnBlock(targetUserID, userID string) error {
-	panic("unimplemented")
+	existingUser, err := s.repo.GetByID(userID)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	if userID != existingUser.ID {
+		return errors.New("user ID does not match")
+	}
+
+	isBlocked, err := s.repo.IsBlocked(targetUserID, userID)
+	if err != nil {
+		return errors.New("failed to check block status")
+	}
+
+	if !isBlocked {
+		return errors.New("user is not blocked")
+	}
+
+	err = s.repo.UnBlock(targetUserID, userID)
+	if err != nil {
+		return errors.New("failed to unblock user")
+	}
+
+	return nil
 }
 
 func (s *relationshipService) GetFriends(userID string) ([]*models.User, error) {

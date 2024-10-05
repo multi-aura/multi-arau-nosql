@@ -361,7 +361,7 @@ func (repo *userRepository) Block(targetUserID, userID string) error {
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		_, err := tx.Run(ctx, `
 			MATCH (u1:User {user_id: $targetUserID}), (u2:User {user_id: $userID})
-			MERGE (u1)-[:BLOCKS]->(u2)
+			MERGE (u1)-[:BLOCKED]->(u2)
 			RETURN u1, u2
 		`, map[string]interface{}{
 			"targetUserID": targetUserID,
@@ -388,7 +388,7 @@ func (repo *userRepository) UnBlock(targetUserID, userID string) error {
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		_, err := tx.Run(ctx, `
-			MATCH (u1:User {user_id: $targetUserID})-[r:BLOCKS]->(u2:User {user_id: $userID})
+			MATCH (u1:User {user_id: $targetUserID})-[r:BLOCKED]->(u2:User {user_id: $userID})
 			DELETE r
 			RETURN u1, u2
 		`, map[string]interface{}{
@@ -449,7 +449,7 @@ func (repo *userRepository) IsBlocked(targetUserID, userID string) (bool, error)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		query := `
-			MATCH (u1:User {user_id: $targetUserID})-[r:BLOCKS]->(u2:User {user_id: $userID})
+			MATCH (u1:User {user_id: $targetUserID})-[r:BLOCKED]->(u2:User {user_id: $userID})
 			RETURN COUNT(r) > 0 AS isBlocked
 		`
 
