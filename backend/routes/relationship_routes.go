@@ -16,9 +16,9 @@ func SetupRelationshipRoutes(app *fiber.App) {
 
 	relationships := app.Group("/relationships")
 
-	// relationships.Post("/follow/:userID", controller.Follow)
-	// relationships.Delete("/unfollow/:userID", controller.Unfollow)
-	// relationships.Post("/block/:userID", controller.Block)
-	// relationships.Delete("/unblock/:userID", controller.Unblock)
+	relationships.Post("/follow/:userID", middlewares.AuthMiddleware(), controller.Follow)
+	relationships.Delete("/unfollow/:userID", middlewares.AuthMiddleware(), controller.UnFollow)
+	relationships.Post("/block/:userID", middlewares.AuthMiddleware(), controller.Block)
+	relationships.Delete("/unblock/:userID", middlewares.AuthMiddleware(), controller.UnBlock)
 	relationships.Get("/friends", middlewares.AuthMiddleware(), controller.GetFriends)
 }
