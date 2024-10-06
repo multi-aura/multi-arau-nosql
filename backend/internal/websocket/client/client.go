@@ -30,7 +30,19 @@ func (c *Client) ReadPump(broadcast func([]byte)) {
 	}
 }
 
-func (c *Client) WritePumo() {
+func (c *Client) WritePump() {
 	defer c.Conn.Close()
-
+	for {
+		select {
+		case message, ok := <-c.Send:
+			if !ok {
+				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+			err := c.Conn.WriteMessage(websocket.TextMessage, message)
+			if err != nil {
+				return
+			}
+		}
+	}
 }

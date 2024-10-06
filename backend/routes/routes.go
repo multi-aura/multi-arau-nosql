@@ -6,10 +6,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+var neo4jDB *databases.Neo4jDB
 var mongoDB *databases.MongoDB
 
 func SetupRoutes(app *fiber.App) {
-	mongoDB = databases.Instance()
-	setupUserRoutes(app)
+	neo4jDB = databases.Neo4jInstance()
+	mongoDB = databases.MongoInstance()
+	SetupUserRoutes(app)
+	SetupRelationshipRoutes(app)
+	SetupConversationRoutes(app)
 
 }
