@@ -14,6 +14,7 @@ var (
 
 type Config struct {
 	Neo4j     Neo4jConfig
+	Mongo     MongoConfig
 	SecretKey string
 }
 
@@ -21,6 +22,11 @@ type Neo4jConfig struct {
 	URI      string
 	Username string
 	Password string
+}
+
+type MongoConfig struct {
+	URI      string
+	Database string
 }
 
 func Instance() (*Config, error) {
@@ -40,6 +46,7 @@ func Instance() (*Config, error) {
 		err = viper.Unmarshal(instance)
 		if err != nil {
 			err = log.Output(2, "unable to decode into struct: "+err.Error())
+			return
 		}
 	})
 
