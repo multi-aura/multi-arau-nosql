@@ -19,3 +19,21 @@ func StructToMap(input interface{}) (map[string]interface{}, error) {
 
 	return result, nil
 }
+
+func GetString(data map[string]interface{}, key string) string {
+	if val, ok := data[key]; ok {
+		if str, ok := val.(string); ok {
+			return str
+		}
+	}
+	return ""
+}
+
+func GetBool(data map[string]interface{}, key string) bool {
+	if val, ok := data[key]; ok {
+		if b, ok := val.(bool); ok {
+			return b
+		}
+	}
+	return false
+}

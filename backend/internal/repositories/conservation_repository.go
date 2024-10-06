@@ -78,7 +78,7 @@ func (repo *conservationRepository) Delete(id string) error {
 
 // Update implements ConservationRepository.
 func (repo *conservationRepository) Update(entityMap *map[string]interface{}) error {
-	filter := bson.M{"_id": (*entityMap)["user_id"].(string)}
+	filter := bson.M{"_id": (*entityMap)["userID"].(string)}
 
 	updateQuery := bson.M{"$set": entityMap}
 

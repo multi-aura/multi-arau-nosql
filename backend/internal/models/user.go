@@ -2,14 +2,16 @@ package models
 
 import (
 	"errors"
+	"multiaura/pkg/utils"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 )
 
 type User struct {
-	ID          string    `bson:"user_id" json:"user_id" form:"user_id"`
+	ID          string    `bson:"userID" json:"userID" form:"userID"`
 	FullName    string    `bson:"fullname" json:"fullname" form:"fullname"`
+	Username    string    `bson:"username" json:"username" form:"username"`
 	Email       string    `bson:"email" json:"email" form:"email"`
 	Password    string    `bson:"password" json:"password" form:"password"`
 	PhoneNumber string    `bson:"phone" json:"phone" form:"phone"`
@@ -19,11 +21,13 @@ type User struct {
 	Province    string    `bson:"province" json:"province" form:"province"`
 	Avatar      string    `bson:"avatar" json:"avatar" form:"avatar"`
 	IsAdmin     bool      `bson:"isAdmin" json:"isAdmin" form:"isAdmin"`
-	IsActive    bool      `bson:"IsActive" json:"IsActive" form:"IsActive"`
+	IsActive    bool      `bson:"isActive" json:"isActive" form:"isActive"`
+	IsPublic    bool      `bson:"isPublic" json:"isPublic" form:"isPublic"`
 }
 
 type RegisterRequest struct {
 	FullName    string `bson:"fullname" json:"fullname" form:"fullname" validate:"required"`
+	Username    string `bson:"username" json:"username" form:"username"`
 	Email       string `bson:"email" json:"email" form:"email" validate:"required,email"`
 	Password    string `bson:"password" json:"password" form:"password" validate:"required,min=3"`
 	PhoneNumber string `bson:"phone" json:"phone" form:"phone" validate:"required"`
@@ -34,14 +38,15 @@ type RegisterRequest struct {
 }
 
 type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Username string `bson:"username" json:"username" form:"username"`
+	Password string `bson:"password" json:"password" form:"password" validate:"required,min=3"`
 }
 
 func (u *User) ToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"user_id":  u.ID,
+		"userID":   u.ID,
 		"fullname": u.FullName,
+		"username": u.Username,
 		"email":    u.Email,
 		"password": u.Password,
 		"phone":    u.PhoneNumber,
@@ -52,6 +57,7 @@ func (u *User) ToMap() map[string]interface{} {
 		"avatar":   u.Avatar,
 		"isAdmin":  u.IsAdmin,
 		"isActive": u.IsActive,
+		"isPublic": u.IsPublic,
 	}
 }
 
@@ -79,35 +85,19 @@ func (u *User) FromMap(data map[string]interface{}) (*User, error) {
 	}
 
 	return &User{
-		ID:          getString(data, "user_id"),
-		FullName:    getString(data, "fullname"),
-		Email:       getString(data, "email"),
-		Password:    getString(data, "password"),
-		PhoneNumber: getString(data, "phone"),
+		ID:          utils.GetString(data, "userID"),
+		FullName:    utils.GetString(data, "fullname"),
+		Username:    utils.GetString(data, "username"),
+		Email:       utils.GetString(data, "email"),
+		Password:    utils.GetString(data, "password"),
+		PhoneNumber: utils.GetString(data, "phone"),
 		Birthday:    birthday,
-		Gender:      getString(data, "gender"),
-		Nation:      getString(data, "nation"),
-		Province:    getString(data, "province"),
-		Avatar:      getString(data, "avatar"),
-		IsAdmin:     getBool(data, "isAdmin"),
-		IsActive:    getBool(data, "isActive"),
+		Gender:      utils.GetString(data, "gender"),
+		Nation:      utils.GetString(data, "nation"),
+		Province:    utils.GetString(data, "province"),
+		Avatar:      utils.GetString(data, "avatar"),
+		IsAdmin:     utils.GetBool(data, "isAdmin"),
+		IsActive:    utils.GetBool(data, "isActive"),
+		IsPublic:    utils.GetBool(data, "isPublic"),
 	}, nil
-}
-
-func getString(data map[string]interface{}, key string) string {
-	if val, ok := data[key]; ok {
-		if str, ok := val.(string); ok {
-			return str
-		}
-	}
-	return ""
-}
-
-func getBool(data map[string]interface{}, key string) bool {
-	if val, ok := data[key]; ok {
-		if b, ok := val.(bool); ok {
-			return b
-		}
-	}
-	return false
 }

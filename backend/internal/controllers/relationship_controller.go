@@ -289,3 +289,71 @@ func (uc *RelationshipController) UnBlock(c *fiber.Ctx) error {
 		Data:    nil,
 	})
 }
+
+func (uc *RelationshipController) GetFollowers(c *fiber.Ctx) error {
+	userID, ok := c.Locals("userID").(string)
+	if !ok || userID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusUnauthorized,
+			Message: "Unauthorized",
+			Error:   "StatusUnauthorized",
+		})
+	}
+
+	followers, err := uc.service.GetFollowers(userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusInternalServerError,
+			Message: "Fail to get followers",
+			Error:   "StatusInternalServerError",
+		})
+	}
+
+	if len(followers) == 0 {
+		return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
+			Status:  fiber.StatusOK,
+			Message: "No followers found",
+			Data:    followers,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
+		Status:  fiber.StatusOK,
+		Message: "Followers retrieved successfully",
+		Data:    followers,
+	})
+}
+
+func (uc *RelationshipController) GetFollowings(c *fiber.Ctx) error {
+	userID, ok := c.Locals("userID").(string)
+	if !ok || userID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusUnauthorized,
+			Message: "Unauthorized",
+			Error:   "StatusUnauthorized",
+		})
+	}
+
+	followings, err := uc.service.GetFollowings(userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusInternalServerError,
+			Message: "Fail to get followings",
+			Error:   "StatusInternalServerError",
+		})
+	}
+
+	if len(followings) == 0 {
+		return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
+			Status:  fiber.StatusOK,
+			Message: "No followings found",
+			Data:    followings,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
+		Status:  fiber.StatusOK,
+		Message: "Followings retrieved successfully",
+		Data:    followings,
+	})
+}

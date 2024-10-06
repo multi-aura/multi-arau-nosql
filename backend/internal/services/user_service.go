@@ -5,13 +5,14 @@ import (
 	"multiaura/internal/models"
 	"multiaura/internal/repositories"
 	"multiaura/pkg/utils"
+	"multiaura/pkg/validators"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {
 	Register(req *models.RegisterRequest) error
-	Login(email string, password string) (*models.User, error)
+	Login(username string, password string) (*models.User, error)
 	Logout(userID string) error
 	DeleteAccount(userID string) error
 	Update(userMap *map[string]interface{}) error
@@ -36,6 +37,9 @@ func (s *userService) Register(req *models.RegisterRequest) error {
 	if req.FullName == "" {
 		return errors.New("fullname is required")
 	}
+	if req.Username == "" {
+		return errors.New("username is required")
+	}
 	if req.Password == "" {
 		return errors.New("password is required")
 	}
@@ -52,6 +56,22 @@ func (s *userService) Register(req *models.RegisterRequest) error {
 	if err != nil {
 		return errors.New("failed to convert to User")
 	}
+
+	existsEmail, _ := s.repo.GetUserByEmail(user.Email)
+	if existsEmail != nil {
+		return errors.New("email already exists")
+	}
+
+	existsPhone, _ := s.repo.GetUserByPhone(user.PhoneNumber)
+	if existsPhone != nil {
+		return errors.New("phone already exists")
+	}
+
+	existsUsername, _ := s.repo.GetUserByUsername(user.Username)
+	if existsUsername != nil {
+		return errors.New("username already exists")
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return errors.New("failed to hash password")
@@ -67,14 +87,24 @@ func (s *userService) Register(req *models.RegisterRequest) error {
 }
 
 // Login a user by email
-func (s *userService) Login(email string, password string) (*models.User, error) {
-	user, err := s.repo.GetUserByEmail(email)
-	if err != nil {
-		return nil, errors.New("invalid email")
+func (s *userService) Login(username string, password string) (*models.User, error) {
+	var user *models.User
+	var err error
+
+	if isValid := validators.IsValidateEmail(username); isValid {
+		user, err = s.repo.GetUserByEmail(username)
+		if err != nil {
+			return nil, errors.New("user not found with this email")
+		}
+	} else {
+		user, err = s.repo.GetUserByUsername(username)
+		if err != nil {
+			return nil, errors.New("user not found with this username")
+		}
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return nil, errors.New("invalid password")
+		return nil, err
 	}
 
 	return user, nil
@@ -92,7 +122,6 @@ func (s *userService) Logout(userID string) error {
 	return nil
 }
 
-// Delete a user account
 func (s *userService) DeleteAccount(userID string) error {
 	existingUser, err := s.repo.GetByID(userID)
 	if err != nil {
@@ -105,9 +134,8 @@ func (s *userService) DeleteAccount(userID string) error {
 	return s.repo.Delete(userID)
 }
 
-// Update a user's information
 func (s *userService) Update(userMap *map[string]interface{}) error {
-	userID := (*userMap)["user_id"].(string)
+	userID := (*userMap)["userID"].(string)
 	existingUser, err := s.repo.GetByID(userID)
 	if err != nil {
 		return errors.New("user not found")
@@ -115,6 +143,10 @@ func (s *userService) Update(userMap *map[string]interface{}) error {
 
 	if userID != existingUser.ID {
 		return errors.New("user ID does not match")
+	}
+	existsPhone, _ := s.repo.GetUserByPhone((*userMap)["phone"].(string))
+	if existsPhone != nil {
+		return errors.New("phone already exists")
 	}
 
 	if err := s.repo.Update(userMap); err != nil {
@@ -124,7 +156,6 @@ func (s *userService) Update(userMap *map[string]interface{}) error {
 	return nil
 }
 
-// ForgotPassword
 func (s *userService) ForgotPassword(email string) error {
 	return nil
 }

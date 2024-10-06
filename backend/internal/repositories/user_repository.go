@@ -16,6 +16,7 @@ type UserRepository interface {
 	GetUsersByName(name string) ([]models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	GetUserByPhone(phone string) (*models.User, error)
+	GetUserByUsername(username string) (*models.User, error)
 	Follow(targetUserID, userID string) error
 	UnFollow(targetUserID, userID string) error
 	Block(targetUserID, userID string) error
@@ -23,6 +24,8 @@ type UserRepository interface {
 	IsFollowingOrFriend(targetUserID, userID string) (bool, error)
 	IsBlocked(targetUserID, userID string) (bool, error)
 	GetFriends(userID string) ([]*models.User, error)
+	GetFollowers(userID string) ([]*models.UserSummary, error)
+	GetFollowings(userID string) ([]*models.UserSummary, error)
 }
 
 type userRepository struct {
@@ -38,8 +41,8 @@ func (repo *userRepository) GetByID(id string) (*models.User, error) {
 	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close(ctx)
 
-	result, err := session.Run(ctx, "MATCH (u:User {user_id: $user_id, isActive: true}) RETURN u", map[string]interface{}{
-		"user_id": id,
+	result, err := session.Run(ctx, "MATCH (u:User {userID: $userID, isActive: true}) RETURN u", map[string]interface{}{
+		"userID": id,
 	})
 	if err != nil {
 		return nil, err
@@ -65,16 +68,6 @@ func (repo *userRepository) GetByID(id string) (*models.User, error) {
 }
 
 func (repo *userRepository) Create(user models.User) error {
-	existsEmail, _ := repo.GetUserByEmail(user.Email)
-	if existsEmail != nil {
-		return errors.New("email already exists")
-	}
-
-	existsPhone, _ := repo.GetUserByPhone(user.PhoneNumber)
-	if existsPhone != nil {
-		return errors.New("phone already exists")
-	}
-
 	ctx := context.Background()
 	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
@@ -112,20 +105,20 @@ func (repo *userRepository) Update(entityMap *map[string]interface{}) error {
 	}
 	defer tx.Close(ctx)
 
-	userID := (*entityMap)["user_id"].(string)
+	userID := (*entityMap)["userID"].(string)
 
 	userProps := make(map[string]interface{})
 
 	for key, value := range *entityMap {
-		if key != "user_id" { // Không thêm user_id vào userProps
+		if key != "userID" { // Không thêm userID vào userProps
 			userProps[key] = value
 		}
 	}
 
 	result, err := tx.Run(ctx,
-		"MATCH (u:User {user_id: $user_id}) SET u += $userProps RETURN u",
+		"MATCH (u:User {userID: $userID}) SET u += $userProps RETURN u",
 		map[string]interface{}{
-			"user_id":   userID,
+			"userID":    userID,
 			"userProps": userProps,
 		},
 	)
@@ -154,9 +147,9 @@ func (repo *userRepository) Delete(id string) error {
 	defer tx.Close(ctx)
 
 	result, err := tx.Run(ctx,
-		"MATCH (u:User {user_id: $user_id}) SET u.isActive = false RETURN u",
+		"MATCH (u:User {userID: $userID}) SET u.isActive = false RETURN u",
 		map[string]interface{}{
-			"user_id": id,
+			"userID": id,
 		},
 	)
 	if err != nil {
@@ -282,6 +275,40 @@ func (repo *userRepository) GetUserByPhone(phone string) (*models.User, error) {
 	return nil, errors.New("user with phone " + phone + " not found")
 }
 
+func (repo *userRepository) GetUserByUsername(username string) (*models.User, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
+
+	result, err := session.Run(ctx,
+		"MATCH (u:User {username: $username}) RETURN u",
+		map[string]interface{}{
+			"username": username,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Next(ctx) {
+		record := result.Record()
+		node, found := record.Get("u")
+		if !found {
+			return nil, errors.New("user not found")
+		}
+
+		userNode := node.(neo4j.Node)
+		user := &models.User{}
+		user, err := user.FromMap(userNode.Props)
+		if err != nil {
+			return nil, errors.New("error converting map to User")
+		}
+		return user, nil
+	}
+
+	return nil, errors.New("user with username " + username + " not found")
+}
+
 func (repo *userRepository) Follow(targetUserID, userID string) error {
 	ctx := context.Background()
 	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{
@@ -291,7 +318,7 @@ func (repo *userRepository) Follow(targetUserID, userID string) error {
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		_, err := tx.Run(ctx, `
-			MATCH (u1:User {user_id: $targetUserID}), (u2:User {user_id: $userID})
+			MATCH (u1:User {userID: $targetUserID}), (u2:User {userID: $userID})
 			MERGE (u1)-[f1:FOLLOWS]->(u2)
 			WITH u1, u2, f1
 			OPTIONAL MATCH (u2)-[f2:FOLLOWS]->(u1)
@@ -326,7 +353,7 @@ func (repo *userRepository) UnFollow(targetUserID, userID string) error {
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		_, err := tx.Run(ctx, `
-			MATCH (u1:User {user_id: $targetUserID})-[r:FOLLOWS|FRIEND_WITH]->(u2:User {user_id: $userID})
+			MATCH (u1:User {userID: $targetUserID})-[r:FOLLOWS|FRIEND_WITH]->(u2:User {userID: $userID})
 			OPTIONAL MATCH (u2)-[f2:FRIEND_WITH]->(u1)
 			WITH u1, u2, r, f2
 			DELETE r
@@ -360,7 +387,7 @@ func (repo *userRepository) Block(targetUserID, userID string) error {
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		_, err := tx.Run(ctx, `
-			MATCH (u1:User {user_id: $targetUserID}), (u2:User {user_id: $userID})
+			MATCH (u1:User {userID: $targetUserID}), (u2:User {userID: $userID})
 			MERGE (u1)-[:BLOCKED]->(u2)
 			RETURN u1, u2
 		`, map[string]interface{}{
@@ -388,7 +415,7 @@ func (repo *userRepository) UnBlock(targetUserID, userID string) error {
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		_, err := tx.Run(ctx, `
-			MATCH (u1:User {user_id: $targetUserID})-[r:BLOCKED]->(u2:User {user_id: $userID})
+			MATCH (u1:User {userID: $targetUserID})-[r:BLOCKED]->(u2:User {userID: $userID})
 			DELETE r
 			RETURN u1, u2
 		`, map[string]interface{}{
@@ -414,7 +441,7 @@ func (repo *userRepository) IsFollowingOrFriend(targetUserID, userID string) (bo
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		query := `
-			MATCH (u1:User {user_id: $targetUserID})-[r:FOLLOWS|FRIEND_WITH]->(u2:User {user_id: $userID})
+			MATCH (u1:User {userID: $targetUserID})-[r:FOLLOWS|FRIEND_WITH]->(u2:User {userID: $userID})
 			RETURN COUNT(r) > 0 AS isFollowingOrFriend
 		`
 
@@ -449,7 +476,7 @@ func (repo *userRepository) IsBlocked(targetUserID, userID string) (bool, error)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		query := `
-			MATCH (u1:User {user_id: $targetUserID})-[r:BLOCKED]->(u2:User {user_id: $userID})
+			MATCH (u1:User {userID: $targetUserID})-[r:BLOCKED]->(u2:User {userID: $userID})
 			RETURN COUNT(r) > 0 AS isBlocked
 		`
 
@@ -486,7 +513,7 @@ func (repo *userRepository) GetFriends(userID string) ([]*models.User, error) {
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		records, err := tx.Run(ctx, `
-			MATCH (u:User {user_id: $userID})-[:FRIEND_WITH]->(friend:User)
+			MATCH (u:User {userID: $userID})-[:FRIEND_WITH]->(friend:User)
 			RETURN friend
 		`, map[string]interface{}{
 			"userID": userID,
@@ -529,4 +556,120 @@ func (repo *userRepository) GetFriends(userID string) ([]*models.User, error) {
 	}
 
 	return friendList, nil
+}
+
+func (repo *userRepository) GetFollowers(userID string) ([]*models.UserSummary, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeRead,
+	})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		records, err := tx.Run(ctx, `
+			MATCH (u:User)-[:FOLLOWS|FRIEND_WITH]->(f:User)
+			WHERE u.userID = $userID
+			RETURN f.userID AS userID, f.fullname AS fullname, f.username AS username, f.avatar AS avatar
+		`, map[string]interface{}{
+			"userID": userID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var followers []*models.UserSummary
+		for records.Next(ctx) {
+			record := records.Record()
+			followerUser := &models.UserSummary{}
+
+			if userIDVal, ok := record.Get("userID"); ok {
+				followerUser.ID = userIDVal.(string)
+			}
+			if fullnameVal, ok := record.Get("fullname"); ok {
+				followerUser.FullName = fullnameVal.(string)
+			}
+			if usernameVal, ok := record.Get("username"); ok {
+				followerUser.Username = usernameVal.(string)
+			}
+			if avatarVal, ok := record.Get("avatar"); ok {
+				followerUser.Avatar = avatarVal.(string)
+			}
+
+			followers = append(followers, followerUser)
+		}
+
+		if err = records.Err(); err != nil {
+			return nil, err
+		}
+		return followers, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	followerList, ok := result.([]*models.UserSummary)
+	if !ok {
+		return nil, errors.New("failed to cast result to []*models.UserSummary")
+	}
+
+	return followerList, nil
+}
+
+func (repo *userRepository) GetFollowings(userID string) ([]*models.UserSummary, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeRead,
+	})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		records, err := tx.Run(ctx, `
+			MATCH (u:User)<-[:FOLLOWS|FRIEND_WITH]-(f:User)
+			WHERE u.userID = $userID
+			RETURN f.userID AS userID, f.fullname AS fullname, f.username AS username, f.avatar AS avatar
+		`, map[string]interface{}{
+			"userID": userID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var followings []*models.UserSummary
+		for records.Next(ctx) {
+			record := records.Record()
+			followingUser := &models.UserSummary{}
+
+			if userIDVal, ok := record.Get("userID"); ok {
+				followingUser.ID = userIDVal.(string)
+			}
+			if fullnameVal, ok := record.Get("fullname"); ok {
+				followingUser.FullName = fullnameVal.(string)
+			}
+			if usernameVal, ok := record.Get("username"); ok {
+				followingUser.Username = usernameVal.(string)
+			}
+			if avatarVal, ok := record.Get("avatar"); ok {
+				followingUser.Avatar = avatarVal.(string)
+			}
+
+			followings = append(followings, followingUser)
+		}
+
+		if err = records.Err(); err != nil {
+			return nil, err
+		}
+		return followings, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	followingList, ok := result.([]*models.UserSummary)
+	if !ok {
+		return nil, errors.New("failed to cast result to []*models.UserSummary")
+	}
+
+	return followingList, nil
 }
