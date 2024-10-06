@@ -6,6 +6,7 @@ import (
 	"log"
 	"multiaura/internal/databases"
 	"multiaura/internal/models"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -22,10 +23,15 @@ type UserRepository interface {
 	Block(targetUserID, userID string) error
 	UnBlock(targetUserID, userID string) error
 	IsFollowingOrFriend(targetUserID, userID string) (bool, error)
-	IsBlocked(targetUserID, userID string) (bool, error)
+	IsBlockedBy(targetUserID, userID string) (bool, error)
+	IsBlocking(targetUserID, userID string) (bool, error)
+	IsFollowing(targetUserID, userID string) (bool, error)
+	IsFollowedBy(targetUserID, userID string) (bool, error)
+	IsFriend(targetUserID, userID string) (bool, error)
 	GetFriends(userID string) ([]*models.User, error)
 	GetFollowers(userID string) ([]*models.UserSummary, error)
 	GetFollowings(userID string) ([]*models.UserSummary, error)
+	GetRelationship(targetUserID, userID string) (models.RelationshipStatus, error)
 }
 
 type userRepository struct {
@@ -319,13 +325,13 @@ func (repo *userRepository) Follow(targetUserID, userID string) error {
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		_, err := tx.Run(ctx, `
 			MATCH (u1:User {userID: $targetUserID}), (u2:User {userID: $userID})
-			MERGE (u1)-[f1:FOLLOWS]->(u2)
+			MERGE (u1)-[f1:FOLLOWS {since: timestamp()}]->(u2)
 			WITH u1, u2, f1
 			OPTIONAL MATCH (u2)-[f2:FOLLOWS]->(u1)
 			WITH u1, u2, f1, f2
 			WHERE f2 IS NOT NULL
-			MERGE (u1)-[:FRIEND_WITH]->(u2)
-			MERGE (u2)-[:FRIEND_WITH]->(u1)
+			MERGE (u1)-[:FRIEND_WITH {since: f1.since}]->(u2)
+			MERGE (u2)-[:FRIEND_WITH {since: f2.since}]->(u1)
 			DELETE f1, f2
 			RETURN u1, u2
 		`, map[string]interface{}{
@@ -359,7 +365,7 @@ func (repo *userRepository) UnFollow(targetUserID, userID string) error {
 			DELETE r
 			WITH u1, u2, f2
 			WHERE f2 IS NOT NULL
-			CREATE (u2)-[:FOLLOWS]->(u1)
+			CREATE (u2)-[:FOLLOWS {since: f2.since}]->(u1)
 			DELETE f2
 			RETURN u1, u2
 		`, map[string]interface{}{
@@ -469,14 +475,14 @@ func (repo *userRepository) IsFollowingOrFriend(targetUserID, userID string) (bo
 	return result.(bool), nil
 }
 
-func (repo *userRepository) IsBlocked(targetUserID, userID string) (bool, error) {
+func (repo *userRepository) IsBlockedBy(targetUserID, userID string) (bool, error) {
 	ctx := context.Background()
 	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		query := `
-			MATCH (u1:User {userID: $targetUserID})-[r:BLOCKED]->(u2:User {userID: $userID})
+			MATCH (u1:User {userID: $targetUserID})<-[r:BLOCKED]-(u2:User {userID: $userID})
 			RETURN COUNT(r) > 0 AS isBlocked
 		`
 
@@ -492,6 +498,146 @@ func (repo *userRepository) IsBlocked(targetUserID, userID string) (bool, error)
 		if record.Next(ctx) {
 			isBlocked, _ := record.Record().Get("isBlocked")
 			return isBlocked.(bool), nil
+		}
+
+		return false, errors.New("unexpected result")
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	return result.(bool), nil
+}
+
+func (repo *userRepository) IsBlocking(targetUserID, userID string) (bool, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		query := `
+			MATCH (u1:User {userID: $targetUserID})-[r:BLOCKED]->(u2:User {userID: $userID})
+			RETURN COUNT(r) > 0 AS isBlocking
+		`
+
+		record, err := tx.Run(ctx, query, map[string]interface{}{
+			"userID":       userID,
+			"targetUserID": targetUserID,
+		})
+
+		if err != nil {
+			return false, err
+		}
+
+		if record.Next(ctx) {
+			isBlocking, _ := record.Record().Get("isBlocking")
+			return isBlocking.(bool), nil
+		}
+
+		return false, errors.New("unexpected result")
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	return result.(bool), nil
+}
+
+func (repo *userRepository) IsFollowedBy(targetUserID, userID string) (bool, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		query := `
+			MATCH (u1:User {userID: $targetUserID})<-[r:FOLLOWS]-(u2:User {userID: $userID})
+			RETURN COUNT(r) > 0 AS isFollowedBy
+		`
+
+		record, err := tx.Run(ctx, query, map[string]interface{}{
+			"targetUserID": targetUserID,
+			"userID":       userID,
+		})
+
+		if err != nil {
+			return false, err
+		}
+
+		if record.Next(ctx) {
+			isFollowedBy, _ := record.Record().Get("isFollowedBy")
+			return isFollowedBy.(bool), nil
+		}
+
+		return false, errors.New("unexpected result")
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	return result.(bool), nil
+}
+
+func (repo *userRepository) IsFollowing(targetUserID, userID string) (bool, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		query := `
+			MATCH (u1:User {userID: $targetUserID})-[r:FOLLOWS]->(u2:User {userID: $userID})
+			RETURN COUNT(r) > 0 AS isFollowing
+		`
+
+		record, err := tx.Run(ctx, query, map[string]interface{}{
+			"userID":       userID,
+			"targetUserID": targetUserID,
+		})
+
+		if err != nil {
+			return false, err
+		}
+
+		if record.Next(ctx) {
+			isFollowing, _ := record.Record().Get("isFollowing")
+			return isFollowing.(bool), nil
+		}
+
+		return false, errors.New("unexpected result")
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	return result.(bool), nil
+}
+
+func (repo *userRepository) IsFriend(targetUserID, userID string) (bool, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		query := `
+			MATCH (u1:User {userID: $userID})-[r:FRIEND_WITH]-(u2:User {userID: $targetUserID})
+			RETURN COUNT(r) > 0 AS isFriend
+		`
+
+		record, err := tx.Run(ctx, query, map[string]interface{}{
+			"userID":       userID,
+			"targetUserID": targetUserID,
+		})
+
+		if err != nil {
+			return false, err
+		}
+
+		if record.Next(ctx) {
+			isFriend, _ := record.Record().Get("isFriend")
+			return isFriend.(bool), nil
 		}
 
 		return false, errors.New("unexpected result")
@@ -672,4 +818,92 @@ func (repo *userRepository) GetFollowings(userID string) ([]*models.UserSummary,
 	}
 
 	return followingList, nil
+}
+
+func (repo *userRepository) GetRelationship(targetUserID, userID string) (models.RelationshipStatus, error) {
+    ctx := context.Background()
+    session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+    defer session.Close(ctx)
+
+    result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+        query := `
+            MATCH (u1:User {userID: $targetUserID}), (u2:User {userID: $userID})
+            OPTIONAL MATCH (u1)-[r1:FOLLOWS]->(u2)
+            OPTIONAL MATCH (u2)-[r2:FOLLOWS]->(u1)
+            OPTIONAL MATCH (u1)-[r3:BLOCKED]->(u2)
+            OPTIONAL MATCH (u2)-[r4:BLOCKED]->(u1)
+            OPTIONAL MATCH (u1)-[r5:FRIEND_WITH]->(u2)
+            OPTIONAL MATCH (u2)-[r6:FRIEND_WITH]->(u1)
+            RETURN 
+                CASE 
+                    WHEN COUNT(r3) > 0 THEN 'BLOCKING'
+                    WHEN COUNT(r4) > 0 THEN 'BLOCKED_BY'
+                    WHEN COUNT(r5) > 0 THEN 'FRIEND'
+                    WHEN COUNT(r1) > 0 THEN 'FOLLOWING'
+                    WHEN COUNT(r2) > 0 THEN 'FOLLOWED_BY'
+                    ELSE 'NO_RELATIONSHIP' 
+                END AS status,
+                COALESCE(
+                    r3.since, 
+                    r4.since, 
+                    r5.since, 
+                    r1.since, 
+                    r2.since
+                ) AS since
+        `
+
+        // Thực hiện truy vấn
+        record, err := tx.Run(ctx, query, map[string]interface{}{
+            "userID":       userID,
+            "targetUserID": targetUserID,
+        })
+
+        if err != nil {
+            return nil, err
+        }
+
+        if record.Next(ctx) {
+            recordData := record.Record()
+
+            relationshipStatus, _ := recordData.Get("status")
+            since, _ := recordData.Get("since")
+
+            var status models.RelationshipStatusType
+
+            switch relationshipStatus.(string) {
+            case "BLOCKING":
+                status = models.IsBlocking
+            case "BLOCKED_BY":
+                status = models.IsBlockedBy
+            case "FRIEND":
+                status = models.IsFriend
+            case "FOLLOWING":
+                status = models.IsFollowing
+            case "FOLLOWED_BY":
+                status = models.IsFollowedBy
+            default:
+                status = models.NoRelationship
+            }
+
+            var sinceTime *time.Time
+            if since != nil {
+                if sinceTimeValue, ok := since.(time.Time); ok {
+                    sinceTime = &sinceTimeValue
+                }
+            }
+
+            return models.RelationshipStatus{
+                Status: status,
+                Since:  sinceTime,
+            }, nil
+        }
+
+        return models.RelationshipStatus{}, errors.New("no relationship data found")
+    })
+
+    if err != nil {
+        return models.RelationshipStatus{}, err
+    }
+
+    return result.(models.RelationshipStatus), nil
 }

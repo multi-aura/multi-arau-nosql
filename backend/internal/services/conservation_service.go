@@ -12,8 +12,8 @@ type conservationService struct {
 	repo repositories.ConservationRepository
 }
 
-func NewConservationService(repo repositories.ConservationRepository) ConservationService {
-	return &conservationService{repo}
+func NewConservationService(repo *repositories.ConservationRepository) ConservationService {
+	return &conservationService{*repo}
 }
 
 // CreateConservation implements ConservationService.
