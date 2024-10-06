@@ -15,15 +15,15 @@ type MongoDB struct {
 	Database *mongo.Database
 }
 
-var dbInstance *MongoDB
+var mongoInstance *MongoDB
 
-func Instance() *MongoDB {
-	return dbInstance
+func MongoInstance() *MongoDB {
+	return mongoInstance
 }
 
 func NewMongoDB(cfg *config.MongoConfig) (*MongoDB, error) {
-	if dbInstance != nil {
-		return dbInstance, nil // Nếu đã có kết nối, trả về instance hiện tại
+	if mongoInstance != nil {
+		return mongoInstance, nil // Nếu đã có kết nối, trả về instance hiện tại
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -39,12 +39,12 @@ func NewMongoDB(cfg *config.MongoConfig) (*MongoDB, error) {
 		return nil, err
 	}
 
-	dbInstance = &MongoDB{
+	mongoInstance = &MongoDB{
 		Client:   client,
 		Database: client.Database(cfg.Database),
 	}
 
-	return dbInstance, nil
+	return mongoInstance, nil
 }
 
 // Disconnect đóng kết nối MongoDB

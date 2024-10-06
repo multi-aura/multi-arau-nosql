@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	config "multiaura/internal/configs/dev"
 	"multiaura/internal/models"
 	"time"
 
@@ -9,12 +10,20 @@ import (
 
 func GenerateToken(user models.User) (string, error) {
 	claims := jwt.MapClaims{}
-	claims["id"] = user.ID
-	claims["username"] = user.Username
+	claims["userID"] = user.ID
+	claims["fullname"] = user.FullName
 	claims["email"] = user.Email
+	claims["phone"] = user.PhoneNumber
 	claims["isAdmin"] = user.IsAdmin
-	claims["exp"] = time.Now().Add(time.Hour * 720).Unix()
+	claims["isActive"] = user.IsActive
+	claims["exp"] = time.Now().Add(time.Hour * 168).Unix()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte("electronik"))
+
+	cfg, err := config.Instance()
+	if err != nil {
+		return "", err
+	}
+
+	return token.SignedString([]byte(cfg.GetSecretKey()))
 }
