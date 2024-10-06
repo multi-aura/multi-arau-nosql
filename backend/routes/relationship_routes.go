@@ -21,4 +21,6 @@ func SetupRelationshipRoutes(app *fiber.App) {
 	relationships.Post("/block/:userID", middlewares.AuthMiddleware(), controller.Block)
 	relationships.Delete("/unblock/:userID", middlewares.AuthMiddleware(), controller.UnBlock)
 	relationships.Get("/friends", middlewares.AuthMiddleware(), controller.GetFriends)
+	relationships.Get("/followers", middlewares.AuthMiddleware(), controller.GetFollowers)
+	relationships.Get("/followings", middlewares.AuthMiddleware(), controller.GetFollowings)
 }

@@ -12,6 +12,8 @@ type RelationshipService interface {
 	Block(targetUserID, userID string) error
 	UnBlock(targetUserID, userID string) error
 	GetFriends(userID string) ([]*models.User, error)
+	GetFollowers(userID string) ([]*models.UserSummary, error)
+	GetFollowings(userID string) ([]*models.UserSummary, error)
 }
 
 type relationshipService struct {
@@ -76,7 +78,6 @@ func (s *relationshipService) UnFollow(targetUserID, userID string) error {
 	return nil
 }
 
-
 func (s *relationshipService) Block(targetUserID, userID string) error {
 	existingUser, err := s.repo.GetByID(userID)
 	if err != nil {
@@ -137,4 +138,22 @@ func (s *relationshipService) GetFriends(userID string) ([]*models.User, error) 
 		return nil, err
 	}
 	return friends, nil
+}
+
+func (s *relationshipService) GetFollowers(userID string) ([]*models.UserSummary, error) {
+	followers, err := s.repo.GetFollowers(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return followers, nil
+}
+
+func (s *relationshipService) GetFollowings(userID string) ([]*models.UserSummary, error) {
+	followings, err := s.repo.GetFollowings(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return followings, nil
 }

@@ -55,7 +55,7 @@ func (uc *UserController) Login(c *fiber.Ctx) error {
 	}
 
 	// Call the Login service method
-	existingUser, err := uc.service.Login(req.Email, req.Password)
+	existingUser, err := uc.service.Login(req.Username, req.Password)
 	if err != nil {
 		if err.Error() == "invalid email" {
 			return c.Status(fiber.StatusUnauthorized).JSON(APIResponse.ErrorResponse{
@@ -145,7 +145,7 @@ func (uc *UserController) UpdateUser(c *fiber.Ctx) error {
 	}
 
 	// Thêm userID vào map cập nhật
-	updatedData["user_id"] = userID
+	updatedData["userID"] = userID
 
 	// Gọi hàm Update với map thay vì đối tượng User
 	err := uc.service.Update(&updatedData)
