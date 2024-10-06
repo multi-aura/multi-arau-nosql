@@ -11,7 +11,7 @@ import (
 
 func SetupConservationRoutes(app *fiber.App) {
 	repository := repositories.NewConservationRepository(mongoDB)
-	service := services.NewConservationService(repository)
+	service := services.NewConservationService(&repository)
 	controller := controllers.NewConservationController(service)
 
 	relationships := app.Group("/conservations")

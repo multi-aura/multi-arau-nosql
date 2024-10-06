@@ -169,7 +169,6 @@ func (uc *RelationshipController) UnFollow(c *fiber.Ctx) error {
 	})
 }
 
-
 func (uc *RelationshipController) Block(c *fiber.Ctx) error {
 	userID := c.Params("userID")
 	targetUserID, ok := c.Locals("userID").(string)
@@ -355,5 +354,86 @@ func (uc *RelationshipController) GetFollowings(c *fiber.Ctx) error {
 		Status:  fiber.StatusOK,
 		Message: "Followings retrieved successfully",
 		Data:    followings,
+	})
+}
+
+func (uc *RelationshipController) GetProfile(c *fiber.Ctx) error {
+	username := c.Params("username")
+	if username == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusBadRequest,
+			Message: "Username is required",
+			Error:   "StatusBadRequest",
+		})
+	}
+
+	userProfile, err := uc.service.GetProfile(username)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusInternalServerError,
+			Message: "Fail to get user profile",
+			Error:   "StatusInternalServerError",
+		})
+	}
+	userID, ok := c.Locals("userID").(string)
+	if !ok || userID == "" {
+		isBlocked, err := uc.service.IsBlockedBy(userID, userProfile.ID)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
+				Status:  fiber.StatusInternalServerError,
+				Message: "Fail to check block",
+				Error:   "StatusInternalServerError",
+			})
+		}
+
+		if isBlocked {
+			return c.Status(fiber.StatusNotAcceptable).JSON(APIResponse.ErrorResponse{
+				Status:  fiber.StatusNotAcceptable,
+				Message: "Access denied. User is blocked",
+				Error:   "StatusNotAcceptable",
+			})
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
+		Status:  fiber.StatusOK,
+		Message: "User profile retrieved successfully",
+		Data:    userProfile,
+	})
+}
+
+func (uc *RelationshipController) GetRelationshipStatus(c *fiber.Ctx) error {
+	userID, ok := c.Locals("userID").(string)
+	if !ok || userID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusUnauthorized,
+			Message: "Unauthorized",
+			Error:   "StatusUnauthorized",
+		})
+	}
+
+	targetUserID := c.Params("userID")
+	if targetUserID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusBadRequest,
+			Message: "Target userID is required",
+			Error:   "StatusBadRequest",
+		})
+	}
+
+	relationshipStatus, err := uc.service.GetRelationship(userID, targetUserID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusInternalServerError,
+			Message: "Failed to get relationship status",
+			Error:   "StatusInternalServerError",
+		})
+	}
+
+	// Trả về trạng thái quan hệ
+	return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
+		Status:  fiber.StatusOK,
+		Message: "Relationship status retrieved successfully",
+		Data:    relationshipStatus,
 	})
 }
