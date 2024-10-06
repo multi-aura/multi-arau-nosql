@@ -3,4 +3,8 @@ neo4j:
   username: "neo4j"
   password: "vygukgD8_zrf22hIYn37rd4Fg82tdy-JPJmwRb-s3cE"
 
+mongo:
+  uri: "mongodb+srv://nguyenhuyhoang20032020:xVQLY5uZYUcgw04a@cluster0.1jkod.mongodb.net/"
+  database: "multi_aura"
+
 secretKey: "multiaura"

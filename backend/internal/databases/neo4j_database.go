@@ -2,8 +2,8 @@ package databases
 
 import (
 	"context"
-	config "multiaura/internal/configs/dev"
 	"log"
+	config "multiaura/internal/configs/dev"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
@@ -12,16 +12,16 @@ type Neo4jDB struct {
 	Driver neo4j.DriverWithContext
 }
 
-var dbInstance *Neo4jDB
+var neo4jInstance *Neo4jDB
 
-func Instance() *Neo4jDB {
-	return dbInstance
+func Neo4jInstance() *Neo4jDB {
+	return neo4jInstance
 }
 
 // Khởi tạo kết nối Neo4j
 func NewNeo4jDB(cfg *config.Neo4jConfig) (*Neo4jDB, error) {
-	if dbInstance != nil {
-		return dbInstance, nil 
+	if neo4jInstance != nil {
+		return neo4jInstance, nil
 	}
 
 	// Tạo driver kết nối đến Neo4j
@@ -30,14 +30,14 @@ func NewNeo4jDB(cfg *config.Neo4jConfig) (*Neo4jDB, error) {
 		return nil, err
 	}
 
-	dbInstance = &Neo4jDB{
+	neo4jInstance = &Neo4jDB{
 		Driver: driver,
 	}
 
-	return dbInstance, nil
+	return neo4jInstance, nil
 }
 
-//Disconnect Neo4j
+// Disconnect Neo4j
 func (db *Neo4jDB) Disconnect() {
 	if db.Driver != nil {
 		err := db.Driver.Close(context.Background())
