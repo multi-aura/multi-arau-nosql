@@ -27,7 +27,7 @@ type User struct {
 
 type RegisterRequest struct {
 	FullName    string `bson:"fullname" json:"fullname" form:"fullname" validate:"required"`
-	Username    string `bson:"username" json:"username" form:"username"`
+	Username    string `bson:"username" json:"username" form:"username" validate:"required"`
 	Email       string `bson:"email" json:"email" form:"email" validate:"required,email"`
 	Password    string `bson:"password" json:"password" form:"password" validate:"required,min=3"`
 	PhoneNumber string `bson:"phone" json:"phone" form:"phone" validate:"required"`
