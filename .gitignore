@@ -1,2 +1,3 @@
 backend/cmd/server/*.exe
 backend/go.sum
+node_modules

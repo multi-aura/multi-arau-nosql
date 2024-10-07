@@ -1,0 +1,14 @@
+.header {
+    border-bottom: 1px solid #ddd;
+    background-color:#000000 ;
+
+}
+  
+avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Giữ hình ảnh avatar tròn */
+  object-fit: cover;
+  border: 2px solid #fff; /* Thêm viền trắng cho avatar nếu cần */
+}
+  
