@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"multiaura/internal/models"
 	"multiaura/internal/repositories"
 	"time"
@@ -13,6 +14,8 @@ import (
 type ConversationService interface {
 	CreateConversation(userIDs []string, name string) (*models.Conversation, error)
 	GetConversationByID(id string) (*models.Conversation, error)
+	GetListConversations(id string) ([]models.Conversation, error)
+	AddMember(conversationID string, userID []string) error
 }
 
 type conversationService struct {
@@ -31,14 +34,12 @@ func NewConversationService(repo repositories.ConversationRepository, userRepo r
 func (c *conversationService) CreateConversation(userIDs []string, name string) (*models.Conversation, error) {
 	ConversationType := "Private"
 
-	// Kiểm tra số lượng userIDs để xác định loại cuộc trò chuyện
 	if len(userIDs) < 2 {
 		return nil, errors.New("at least two users are required to create a conversation")
 	} else if len(userIDs) > 2 {
 		ConversationType = "Group"
 	}
 
-	// Tạo slice chứa các đối tượng models.Users
 	var users []models.Users
 	for _, id := range userIDs {
 		user, err := c.userRepo.GetByID(id)
@@ -57,7 +58,6 @@ func (c *conversationService) CreateConversation(userIDs []string, name string) 
 		})
 	}
 
-	// Tạo cuộc trò chuyện mới
 	newConversation := models.Conversation{
 		ID:               primitive.NewObjectID(),
 		Name:             name,
@@ -68,7 +68,6 @@ func (c *conversationService) CreateConversation(userIDs []string, name string) 
 		UpdatedAt:        time.Now(),
 	}
 
-	// Lưu cuộc trò chuyện vào cơ sở dữ liệu
 	err := c.repo.Create(newConversation)
 	if err != nil {
 		return nil, errors.New("failed to create conversation")
@@ -91,4 +90,49 @@ func (c *conversationService) GetConversationByID(id string) (*models.Conversati
 	}
 
 	return conversation, nil
+}
+
+func (c *conversationService) GetListConversations(id string) ([]models.Conversation, error) {
+	if id == "" {
+		return nil, errors.New("id not found")
+	}
+	listConversation, err := c.repo.GetListConversations(id)
+	if err != nil {
+		return nil, errors.New("error getting list of conversations")
+	}
+	if len(listConversation) == 0 {
+		return nil, errors.New("no conversations")
+	}
+	return listConversation, nil
+
+}
+
+func (c *conversationService) AddMembers(conversationID string, userIDs []string) error {
+
+	var users []models.Users
+	for _, userID := range userIDs {
+
+		user, err := c.userRepo.GetByID(userID)
+		if err != nil {
+			return err
+		}
+
+		if user == nil {
+			return fmt.Errorf("user with ID %s not found", userID)
+		}
+
+		users = append(users, models.Users{
+			UserID:   user.ID,
+			Fullname: user.FullName,
+			Avatar:   user.Avatar,
+			LastSeen: time.Now(),
+		})
+	}
+
+	err := c.repo.AddMemberToConversation(users, conversationID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

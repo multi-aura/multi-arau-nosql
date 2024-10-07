@@ -2,7 +2,6 @@ package routes
 
 import (
 	"multiaura/internal/controllers"
-	"multiaura/internal/middlewares"
 	"multiaura/internal/repositories"
 	"multiaura/internal/services"
 
@@ -18,7 +17,9 @@ func SetupConversationRoutes(app *fiber.App) {
 
 	relationships := app.Group("/conservations")
 
-	relationships.Post("/chat/:userID", middlewares.AuthMiddleware(), controller.CreateConversation)
 	relationships.Get("/messages/:conversationID", controller.GetConversationByID)
+	relationships.Post("/createmessages", controller.CreateConversation)
+	relationships.Get("/ListMessages/:UserID", controller.GetListConversation)
+	relationships.Post("/AddMenberConversation/:conversationID/members/:userID", controller.AddMember)
 
 }

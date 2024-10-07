@@ -12,14 +12,19 @@ type RelationshipService interface {
 	Block(targetUserID, userID string) error
 	UnBlock(targetUserID, userID string) error
 	GetFriends(userID string) ([]*models.User, error)
+	GetFollowers(userID string) ([]*models.UserSummary, error)
+	GetFollowings(userID string) ([]*models.UserSummary, error)
+	GetProfile(userID string) (*models.User, error)
+	IsBlockedBy(targetUserID, userID string) (bool, error)
+	GetRelationship(userID, targetUserID string) (*models.RelationshipStatus, error)
 }
 
 type relationshipService struct {
 	repo repositories.UserRepository
 }
 
-func NewRelationshipService(repo repositories.UserRepository) RelationshipService {
-	return &relationshipService{repo}
+func NewRelationshipService(repo *repositories.UserRepository) RelationshipService {
+	return &relationshipService{*repo}
 }
 
 func (s *relationshipService) Follow(targetUserID, userID string) error {
@@ -76,7 +81,6 @@ func (s *relationshipService) UnFollow(targetUserID, userID string) error {
 	return nil
 }
 
-
 func (s *relationshipService) Block(targetUserID, userID string) error {
 	existingUser, err := s.repo.GetByID(userID)
 	if err != nil {
@@ -87,7 +91,7 @@ func (s *relationshipService) Block(targetUserID, userID string) error {
 		return errors.New("user ID does not match")
 	}
 
-	isBlocked, err := s.repo.IsBlocked(targetUserID, userID)
+	isBlocked, err := s.repo.IsBlocking(targetUserID, userID)
 	if err != nil {
 		return errors.New("failed to check block status")
 	}
@@ -114,7 +118,7 @@ func (s *relationshipService) UnBlock(targetUserID, userID string) error {
 		return errors.New("user ID does not match")
 	}
 
-	isBlocked, err := s.repo.IsBlocked(targetUserID, userID)
+	isBlocked, err := s.repo.IsBlocking(targetUserID, userID)
 	if err != nil {
 		return errors.New("failed to check block status")
 	}
@@ -137,4 +141,57 @@ func (s *relationshipService) GetFriends(userID string) ([]*models.User, error) 
 		return nil, err
 	}
 	return friends, nil
+}
+
+func (s *relationshipService) GetFollowers(userID string) ([]*models.UserSummary, error) {
+	followers, err := s.repo.GetFollowers(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return followers, nil
+}
+
+func (s *relationshipService) GetFollowings(userID string) ([]*models.UserSummary, error) {
+	followings, err := s.repo.GetFollowings(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return followings, nil
+}
+
+func (s *relationshipService) GetProfile(username string) (*models.User, error) {
+	user, err := s.repo.GetUserByUsername(username)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *relationshipService) IsBlockedBy(targetUserID, userID string) (bool, error) {
+	isBlocked, err := s.repo.IsBlockedBy(targetUserID, userID)
+	if err != nil {
+		return false, errors.New("failed to check block status")
+	}
+	return isBlocked, nil
+}
+
+func (s *relationshipService) GetRelationship(userID, targetUserID string) (*models.RelationshipStatus, error) {
+	userExists, err := s.repo.GetByID(userID)
+	if err != nil || userExists == nil {
+		return &models.RelationshipStatus{}, errors.New("user not found")
+	}
+
+	targetUserExists, err := s.repo.GetByID(targetUserID)
+	if err != nil || targetUserExists == nil {
+		return &models.RelationshipStatus{}, errors.New("target user not found")
+	}
+
+	relationshipStatus, err := s.repo.GetRelationship(targetUserID, userID)
+	if err != nil {
+		return &models.RelationshipStatus{}, err
+	}
+
+	return &relationshipStatus, nil
 }

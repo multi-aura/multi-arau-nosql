@@ -2,9 +2,11 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"multiaura/internal/databases"
 	"multiaura/internal/models"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -13,6 +15,8 @@ import (
 
 type ConversationRepository interface {
 	Repository[models.Conversation]
+	GetListConversations(userID string) ([]models.Conversation, error)
+	AddMemberToConversation(user []models.Users, id_conversation string) error
 }
 
 type conversationRepository struct {
@@ -77,7 +81,7 @@ func (repo *conversationRepository) Delete(id string) error {
 }
 
 func (repo *conversationRepository) Update(entityMap *map[string]interface{}) error {
-	filter := bson.M{"_id": (*entityMap)["user_id"].(string)}
+	filter := bson.M{"_id": (*entityMap)["userID"].(string)}
 
 	updateQuery := bson.M{"$set": entityMap}
 
@@ -90,5 +94,45 @@ func (repo *conversationRepository) Update(entityMap *map[string]interface{}) er
 		return mongo.ErrNoDocuments
 	}
 
+	return nil
+}
+
+func (repo *conversationRepository) GetListConversations(userID string) ([]models.Conversation, error) {
+	var conversations []models.Conversation
+
+	filter := bson.M{"users.user_id": userID}
+
+	cursor, err := repo.collection.Find(context.Background(), filter)
+	if err != nil {
+		return nil, fmt.Errorf("error finding conversations: %v", err)
+	}
+	defer cursor.Close(context.Background())
+
+	if err = cursor.All(context.Background(), &conversations); err != nil {
+		return nil, fmt.Errorf("error decoding conversations: %v", err)
+	}
+
+	return conversations, nil
+}
+func (repo *conversationRepository) AddMemberToConversation(users []models.Users, id_conversation string) error {
+	id_conversationRepository, err := primitive.ObjectIDFromHex(id_conversation)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": id_conversationRepository}
+
+	update := bson.M{
+		"$push": bson.M{
+			"users": users,
+		},
+		"$set": bson.M{
+			"updatedat": time.Now().UTC(),
+		},
+	}
+	_, err = repo.collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
 	return nil
 }

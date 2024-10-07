@@ -32,6 +32,7 @@ func (cc *ConversationController) CreateConversation(c *fiber.Ctx) error {
 		})
 	}
 	conversation, err := cc.service.CreateConversation(rep.UserIDs, rep.Name)
+
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
 			Status:  fiber.StatusInternalServerError,
@@ -76,5 +77,64 @@ func (cc *ConversationController) GetConversationByID(c *fiber.Ctx) error {
 		Status:  fiber.StatusOK,
 		Message: "Get Conversation successfully",
 		Data:    conversation,
+	})
+}
+
+func (cc *ConversationController) GetListConversation(c *fiber.Ctx) error {
+	userID := c.Params("UserID")
+
+	if userID == "" {
+		return c.Status(fiber.StatusOK).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusBadRequest,
+			Message: "userID is not required",
+			Error:   "BadRequest",
+		})
+	}
+	conversation, err := cc.service.GetListConversations(userID)
+	if err != nil {
+		return c.Status(fiber.StatusOK).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusInternalServerError,
+			Message: "No get list conversation found",
+			Error:   "Internal server error",
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
+		Status:  fiber.StatusOK,
+		Message: "Get list conversation successfully",
+		Data:    conversation,
+	})
+}
+func (cc *ConversationController) AddMember(c *fiber.Ctx) error {
+	conversationID := c.Params("conversationID")
+
+	var req struct {
+		UserID []string `json:"user_id" bson:"user_id" form:"user_id"`
+	}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Cannot parse JSON",
+		})
+	}
+
+	if conversationID == "" || len(req.UserID) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  fiber.StatusBadRequest,
+			"message": "Invalid conversationID or userID",
+		})
+	}
+
+	err = cc.service.AddMember(conversationID, req.UserID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  fiber.StatusInternalServerError,
+			"message": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  fiber.StatusOK,
+		"message": "Member added successfully",
 	})
 }
