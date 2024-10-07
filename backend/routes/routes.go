@@ -14,4 +14,6 @@ func SetupRoutes(app *fiber.App) {
 	mongoDB = databases.MongoInstance()
 	SetupUserRoutes(app)
 	SetupRelationshipRoutes(app)
+	SetupConversationRoutes(app)
+
 }
