@@ -15,7 +15,7 @@ type (
 
 	Chat struct {
 		ID        primitive.ObjectID `json:"id_chat" bson:"id_chat,omitempty" form:"id_chat,omitempty"`
-		Sender    User               `json:"sender" bson:"sender" form:"sender"`
+		Sender    Users              `json:"sender" bson:"sender" form:"sender"`
 		Content   ChatContent        `json:"content" bson:"content" form:"content"`
 		Emotion   []string           `json:"emotion" bson:"emotion,omitempty" form:"emotion,omitempty"`
 		CreatedAt time.Time          `json:"createdat" bson:"createdat" form:"createdat"`
