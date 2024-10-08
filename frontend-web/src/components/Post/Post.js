@@ -7,14 +7,14 @@ import { faThumbsUp, faCommentDots, faShare, faHeart, faBookmark } from '@fortaw
 function Post({ post }) {
   return (
     <div className="post p-3 mb-4 rounded shadow-sm text-white">
-      <div className="d-flex align-items-center mb-3">
+      <div className="d-flex align-items-center mb-2">
         <img src={post.avatar} alt="Avatar" className="avatar rounded-circle" />
         <div className="ml-3">
-          <h5>{post.username}</h5>
-          <p className="text-muted">{post.time}</p> 
+          <h5 className="text-fullname">{post.username}</h5>
+          <p className="text-time">{post.time}</p> 
         </div>
       </div>
-      <p>{post.content}</p>
+      <p className='content-post'>{post.content}</p>
       <img src={post.image} alt="Post" className="img-post img-fluid rounded mb-4" />
       <div className="d-flex justify-content-between align-items-center">
         <div className="d-flex">
