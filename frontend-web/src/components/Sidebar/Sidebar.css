@@ -1,10 +1,10 @@
 .sidebar {
+  width:37vh;
   height: 100vh;
   position: fixed;
   background-color: #000; 
   color: #fff;
   margin-right: 0px;
-  border-right: 1px solid #ddd;
 }
 
 .tab-link {
