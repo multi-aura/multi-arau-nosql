@@ -3,6 +3,8 @@ package utils
 import (
 	"encoding/json"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func StructToMap(input interface{}) (map[string]interface{}, error) {
@@ -83,4 +85,20 @@ func GetMap(data map[string]interface{}, key string) map[string]interface{} {
 		}
 	}
 	return map[string]interface{}{}
+}
+
+func GetObjectID(data map[string]interface{}, key string) primitive.ObjectID {
+	if id, ok := data[key]; ok {
+		switch v := id.(type) {
+		case primitive.ObjectID:
+			return v
+		case string:
+			objectID, err := primitive.ObjectIDFromHex(v)
+			if err != nil {
+				return primitive.NilObjectID
+			}
+			return objectID
+		}
+	}
+	return primitive.NilObjectID
 }
