@@ -10,19 +10,20 @@ import (
 
 func SetupConversationRoutes(app *fiber.App) {
 	repository := repositories.NewConversationRepository(mongoDB)
-	Userrepository := repositories.NewUserRepository(neo4jDB)
+	userrepository := repositories.NewUserRepository(neo4jDB)
 
-	service := services.NewConversationService(repository, Userrepository)
+	service := services.NewConversationService(repository, userrepository)
 	controller := controllers.NewConversationController(service)
 
-	relationships := app.Group("/conservations")
+	conversation := app.Group("/conversation")
 
-	relationships.Get("/conversation-by-id/:conversationID", controller.GetConversationByID)
-	relationships.Post("/create-messages", controller.CreateConversation)
-	relationships.Get("/list-messages/:userID", controller.GetListConversation)
-	relationships.Post("/add-member-conversation/:conversationID", controller.AddMember)
-	relationships.Delete("/remove-member-conversation/:conversationID/Menber/:userID", controller.RemoveMenberConversation)
-	relationships.Post("/send-message/:conversationID", controller.SendMessage)
-	relationships.Get("/messages-chat/:conversationID", controller.GetMessages)
-	relationships.Put("/messages-delete/:conversationID/:messageID", controller.MarkMessageAsDeleted)
+	conversation.Get("/:conversationID", controller.GetConversationByID)
+	conversation.Post("/create-conversation", controller.CreateConversation)
+	conversation.Get("/get-user-conversations/:userID", controller.GetListConversation)
+	conversation.Post("/add-member-message/:conversationID", controller.AddMember)
+	conversation.Delete("/remove-member-conversation/:conversationID/:userID", controller.RemoveMemberConversation)
+	conversation.Post("/send-message/:conversationID", controller.SendMessage)
+	conversation.Get("/get-conversation-messages/:conversationID", controller.GetMessages)
+	conversation.Put("/delete-message/:conversationID/:messageID", controller.MarkMessageAsDeleted)
+
 }

@@ -1,10 +1,7 @@
 package services
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
-	"log"
 	"multiaura/internal/models"
 	"multiaura/internal/repositories"
 	"multiaura/internal/websocket/group"
@@ -123,10 +120,11 @@ func (c *conversationService) AddMembers(conversationID string, userIDs []string
 
 	conversation, err := c.repo.GetByID(conversationID)
 	if err != nil {
-		return fmt.Errorf("conversation not found: %v", err)
+		return err
 	}
 	if conversation == nil {
-		return errors.New("conversation not found")
+		return err
+
 	}
 
 	existingUsers := conversation.Users
@@ -141,10 +139,12 @@ func (c *conversationService) AddMembers(conversationID string, userIDs []string
 	for _, userID := range userIDs {
 		user, err := c.userRepo.GetByID(userID)
 		if err != nil {
-			return fmt.Errorf("failed to retrieve user with ID %s: %v", userID, err)
+			return err
+
 		}
 		if user == nil {
-			return fmt.Errorf("user with ID %s not found", userID)
+			return err
+
 		}
 
 		if !existingUserMap[userID] {
@@ -164,7 +164,8 @@ func (c *conversationService) AddMembers(conversationID string, userIDs []string
 
 	err = c.repo.AddMemberToConversation(newUsers, conversationID)
 	if err != nil {
-		return fmt.Errorf("failed to add new members to conversation: %v", err)
+		return err
+
 	}
 
 	return nil
@@ -196,7 +197,7 @@ func (c *conversationService) RemoveMenberConversation(ConversationID string, Us
 	}
 	conversation.Users = UsersUpdate
 	conversation.UpdatedAt = time.Now()
-	err = c.repo.Update_removeruser(conversation)
+	err = c.repo.UpdateRemoveruser(conversation)
 	if err != nil {
 		return errors.New("Failed to update conversation")
 	}
@@ -227,18 +228,18 @@ func (cs *conversationService) SendMessage(conversationID, userID string, conten
 		return err
 	}
 
-	// Phát tin nhắn qua WebSocket tới tất cả các client trong Group
-	messageData, err := json.Marshal(newMessage)
-	if err != nil {
-		return err
-	}
+	// // Phát tin nhắn qua WebSocket tới tất cả các client trong Group
+	// messageData, err := json.Marshal(newMessage)
+	// if err != nil {
+	// 	return err
+	// }
 
-	if group, ok := cs.websocketGroups[conversationID]; ok {
-		log.Println("Broadcasting message to WebSocket group:", conversationID)
-		group.BroadcastMessage(messageData)
-	} else {
-		log.Println("No WebSocket group found for conversationID:", conversationID)
-	}
+	// if group, ok := cs.websocketGroups[conversationID]; ok {
+	// 	log.Println("Broadcasting message to WebSocket group:", conversationID)
+	// 	group.BroadcastMessage(messageData)
+	// } else {
+	// 	log.Println("No WebSocket group found for conversationID:", conversationID)
+	// }
 
 	return nil
 }

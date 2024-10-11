@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"multiaura/internal/databases"
 	"multiaura/internal/models"
@@ -16,7 +15,7 @@ import (
 type ConversationRepository interface {
 	Repository[models.Conversation]
 	GetListConversations(userID string) ([]models.Conversation, error)
-	Update_removeruser(conversation *models.Conversation) error
+	UpdateRemoveruser(conversation *models.Conversation) error
 	AddMemberToConversation(user []models.Users, id_conversation string) error
 	AddMessageToConversation(message models.Chat, conversationID string) error
 	GetMessagesByConversationID(conversationID string) ([]models.Chat, error)
@@ -99,13 +98,13 @@ func (repo *conversationRepository) Update(entityMap *map[string]interface{}) er
 
 	return nil
 }
-func (repo *conversationRepository) Update_removeruser(conversation *models.Conversation) error {
+func (repo *conversationRepository) UpdateRemoveruser(conversation *models.Conversation) error {
 	filter := bson.M{"_id": conversation.ID}
 
 	update := bson.M{
 		"$set": bson.M{
-			"users":      conversation.Users,
-			"updated_at": conversation.UpdatedAt,
+			"users":     conversation.Users,
+			"updatedat": conversation.UpdatedAt,
 		},
 	}
 
@@ -128,12 +127,12 @@ func (repo *conversationRepository) GetListConversations(userID string) ([]model
 
 	cursor, err := repo.collection.Find(context.Background(), filter)
 	if err != nil {
-		return nil, fmt.Errorf("error finding conversations: %v", err)
+		return nil, err
 	}
 	defer cursor.Close(context.Background())
 
 	if err = cursor.All(context.Background(), &conversations); err != nil {
-		return nil, fmt.Errorf("error decoding conversations: %v", err)
+		return nil, err
 	}
 
 	return conversations, nil
@@ -159,7 +158,7 @@ func (repo *conversationRepository) AddMemberToConversation(users []models.Users
 
 	_, err = repo.collection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
-		return fmt.Errorf("failed to update conversation: %v", err)
+		return err
 	}
 
 	return nil
@@ -174,7 +173,7 @@ func (repo *conversationRepository) AddMessageToConversation(message models.Chat
 	filter := bson.M{"_id": conversationObjectID}
 	update := bson.M{
 		"$push": bson.M{"chats": message},
-		"$set":  bson.M{"updated_at": message.UpdatedAt},
+		"$set":  bson.M{"updatedat": message.UpdatedAt},
 	}
 
 	_, err = repo.collection.UpdateOne(context.Background(), filter, update)
