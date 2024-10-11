@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"log"
 	"multiaura/internal/models"
 	"multiaura/internal/services"
 	APIResponse "multiaura/pkg/api_response"
@@ -52,7 +51,6 @@ func (cc *ConversationController) GetConversationByID(c *fiber.Ctx) error {
 	// Lấy conversationID từ params
 	conversationID := c.Params("conversationID")
 
-	log.Printf("Conversation ID: %v", conversationID)
 	if conversationID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
 			Status:  fiber.StatusBadRequest,

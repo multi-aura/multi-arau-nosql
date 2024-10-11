@@ -5,7 +5,7 @@ import { faHome, faSearch, faCommentDots, faBell, faUser } from '@fortawesome/fr
 
 function Sidebar() {
   return (
-    <div className="sidebar col-2 ">
+    <div className="sidebar">
       <h2 className="text-center py-4">Multi Aura</h2>
       <ul className="nav flex-column">
         <li className="nav-item">
