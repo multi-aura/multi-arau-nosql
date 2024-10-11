@@ -60,7 +60,8 @@ func (c *conversationService) CreateConversation(userIDs []string, name string) 
 			UserID:   user.ID,
 			Fullname: user.FullName,
 			Avatar:   user.Avatar,
-			LastSeen: time.Now(),
+			Username: user.Username,
+			Added_at: time.Now(),
 		})
 	}
 
@@ -152,7 +153,8 @@ func (c *conversationService) AddMembers(conversationID string, userIDs []string
 				UserID:   user.ID,
 				Fullname: user.FullName,
 				Avatar:   user.Avatar,
-				LastSeen: time.Now(),
+				Username: user.Username,
+				Added_at: time.Now(),
 			}
 			newUsers = append(newUsers, newUser)
 		}

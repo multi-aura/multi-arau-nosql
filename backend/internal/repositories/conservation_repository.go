@@ -123,7 +123,7 @@ func (repo *conversationRepository) UpdateRemoveruser(conversation *models.Conve
 func (repo *conversationRepository) GetListConversations(userID string) ([]models.Conversation, error) {
 	var conversations []models.Conversation
 
-	filter := bson.M{"users.user_id": userID}
+	filter := bson.M{"users.userID": userID}
 
 	cursor, err := repo.collection.Find(context.Background(), filter)
 	if err != nil {

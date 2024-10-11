@@ -38,11 +38,4 @@ type (
 		UserID primitive.ObjectID `json:"user_id" bson:"user_id" form:"user_id"`
 		SeenAt time.Time          `json:"seen_at" bson:"seen_at" form:"seen_at"`
 	}
-
-	Users struct {
-		UserID   string    `json:"user_id" bson:"user_id" form:"user_id"`
-		Fullname string    `json:"fullname" bson:"fullname" form:"fullname"`
-		Avatar   string    `json:"avatar" bson:"avatar" form:"avatar"`
-		LastSeen time.Time `json:"last_seen" bson:"last_seen" form:"last_seen"`
-	}
 )
