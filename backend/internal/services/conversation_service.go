@@ -15,7 +15,7 @@ type ConversationService interface {
 	CreateConversation(userIDs []string, name string) (*models.Conversation, error)
 	GetConversationByID(id string) (*models.Conversation, error)
 	GetListConversations(id string) ([]models.Conversation, error)
-	AddMember(conversationID string, userID []string) error
+	AddMembers(conversationID string, userIDs []string) error
 }
 
 type conversationService struct {
@@ -26,7 +26,7 @@ type conversationService struct {
 func NewConversationService(repo repositories.ConversationRepository, userRepo repositories.UserRepository) ConversationService {
 	return &conversationService{
 		repo:     repo,
-		userRepo: userRepo, // Gán userRepo vào service
+		userRepo: userRepo,
 	}
 }
 

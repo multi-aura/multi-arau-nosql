@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"log"
 	"multiaura/internal/services"
 	APIResponse "multiaura/pkg/api_response"
 
@@ -51,7 +50,6 @@ func (cc *ConversationController) GetConversationByID(c *fiber.Ctx) error {
 	// Lấy conversationID từ params
 	conversationID := c.Params("conversationID")
 
-	log.Printf("Conversation ID: %v", conversationID)
 	if conversationID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
 			Status:  fiber.StatusBadRequest,
@@ -125,7 +123,7 @@ func (cc *ConversationController) AddMember(c *fiber.Ctx) error {
 		})
 	}
 
-	err = cc.service.AddMember(conversationID, req.UserID)
+	err = cc.service.AddMembers(conversationID, req.UserID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  fiber.StatusInternalServerError,

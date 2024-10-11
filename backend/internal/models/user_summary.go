@@ -9,7 +9,7 @@ type UserSummary struct {
 	FullName string `bson:"fullname" json:"fullname" form:"fullname"`
 	Username string `bson:"username" json:"username" form:"username"`
 	Avatar   string `bson:"avatar" json:"avatar" form:"avatar"`
-	IsActive bool   `bson:"IsActive" json:"IsActive" form:"IsActive"`
+	IsActive bool   `bson:"isActive" json:"isActive" form:"isActive"`
 }
 
 func (u *UserSummary) ToMap() map[string]interface{} {
