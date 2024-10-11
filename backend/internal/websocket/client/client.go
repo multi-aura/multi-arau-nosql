@@ -18,8 +18,11 @@ func NewClient(conn *websocket.Conn, UserID string) *Client {
 	}
 }
 
-func (c *Client) ReadPump(broadcast func([]byte)) {
-	defer c.Conn.Close() // Đóng kết nối khi kết thúc
+func (c *Client) ReadPump(broadcast func([]byte), unregister chan<- *Client) {
+	defer func() {
+		unregister <- c // Unregister client khi kết thúc
+		c.Conn.Close()  // Đóng kết nối WebSocket
+	}()
 
 	for {
 		_, message, err := c.Conn.ReadMessage()
@@ -31,7 +34,9 @@ func (c *Client) ReadPump(broadcast func([]byte)) {
 }
 
 func (c *Client) WritePump() {
-	defer c.Conn.Close()
+	defer func() {
+		c.Conn.Close() // Đóng kết nối khi kết thúc
+	}()
 	for {
 		select {
 		case message, ok := <-c.Send:

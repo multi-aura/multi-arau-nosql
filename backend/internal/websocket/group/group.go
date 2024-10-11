@@ -22,6 +22,7 @@ func NewGroup() *Group {
 	}
 }
 
+// Run lắng nghe các sự kiện đăng ký, hủy đăng ký và phát tin nhắn
 func (g *Group) Run() {
 	for {
 		select {
@@ -29,6 +30,7 @@ func (g *Group) Run() {
 			g.mutex.Lock()
 			g.Clients[client] = true
 			g.mutex.Unlock()
+
 		case client := <-g.Unregister:
 			g.mutex.Lock()
 			if _, ok := g.Clients[client]; ok {
@@ -36,6 +38,7 @@ func (g *Group) Run() {
 				close(client.Send)
 			}
 			g.mutex.Unlock()
+
 		case message := <-g.Broadcast:
 			g.mutex.Lock()
 			for client := range g.Clients {
@@ -51,7 +54,17 @@ func (g *Group) Run() {
 	}
 }
 
-// BroadcastMessage gửi tin nhắn tới tất cả các client trong nhóm
+// AddClient thêm client vào Group
+func (g *Group) AddClient(client *client.Client) {
+	g.Register <- client
+}
+
+// RemoveClient hủy đăng ký client khỏi Group
+func (g *Group) RemoveClient(client *client.Client) {
+	g.Unregister <- client
+}
+
+// BroadcastMessage gửi tin nhắn tới tất cả các client trong Group
 func (g *Group) BroadcastMessage(message []byte) {
 	g.Broadcast <- message
 }

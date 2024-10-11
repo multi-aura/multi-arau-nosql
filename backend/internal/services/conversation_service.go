@@ -2,9 +2,9 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"multiaura/internal/models"
 	"multiaura/internal/repositories"
+	"multiaura/internal/websocket/group"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,18 +15,24 @@ type ConversationService interface {
 	CreateConversation(userIDs []string, name string) (*models.Conversation, error)
 	GetConversationByID(id string) (*models.Conversation, error)
 	GetListConversations(id string) ([]models.Conversation, error)
+	RemoveMenberConversation(ConversationID string, UserID string) error
 	AddMembers(conversationID string, userIDs []string) error
+	SendMessage(conversationID, userID string, content models.ChatContent) error
+	GetMessages(conversationID string) ([]models.Chat, error)
+	MarkMessageAsDeleted(conversationID string, messageID string) error
 }
 
 type conversationService struct {
-	repo     repositories.ConversationRepository
-	userRepo repositories.UserRepository
+	repo            repositories.ConversationRepository
+	userRepo        repositories.UserRepository
+	websocketGroups map[string]*group.Group
 }
 
 func NewConversationService(repo repositories.ConversationRepository, userRepo repositories.UserRepository) ConversationService {
 	return &conversationService{
-		repo:     repo,
-		userRepo: userRepo,
+		repo:            repo,
+		userRepo:        userRepo,
+		websocketGroups: make(map[string]*group.Group),
 	}
 }
 
@@ -54,7 +60,8 @@ func (c *conversationService) CreateConversation(userIDs []string, name string) 
 			UserID:   user.ID,
 			Fullname: user.FullName,
 			Avatar:   user.Avatar,
-			LastSeen: time.Now(),
+			Username: user.Username,
+			Added_at: time.Now(),
 		})
 	}
 
@@ -108,31 +115,140 @@ func (c *conversationService) GetListConversations(id string) ([]models.Conversa
 }
 
 func (c *conversationService) AddMembers(conversationID string, userIDs []string) error {
+	if conversationID == "" {
+		return errors.New("conversation ID is required")
+	}
 
-	var users []models.Users
+	conversation, err := c.repo.GetByID(conversationID)
+	if err != nil {
+		return err
+	}
+	if conversation == nil {
+		return err
+
+	}
+
+	existingUsers := conversation.Users
+	existingUserMap := make(map[string]bool)
+
+	for _, user := range existingUsers {
+		existingUserMap[user.UserID] = true
+	}
+
+	var newUsers []models.Users
+
 	for _, userID := range userIDs {
-
 		user, err := c.userRepo.GetByID(userID)
 		if err != nil {
 			return err
-		}
 
+		}
 		if user == nil {
-			return fmt.Errorf("user with ID %s not found", userID)
+			return err
+
 		}
 
-		users = append(users, models.Users{
-			UserID:   user.ID,
-			Fullname: user.FullName,
-			Avatar:   user.Avatar,
-			LastSeen: time.Now(),
-		})
+		if !existingUserMap[userID] {
+			newUser := models.Users{
+				UserID:   user.ID,
+				Fullname: user.FullName,
+				Avatar:   user.Avatar,
+				Username: user.Username,
+				Added_at: time.Now(),
+			}
+			newUsers = append(newUsers, newUser)
+		}
 	}
 
-	err := c.repo.AddMemberToConversation(users, conversationID)
+	if len(newUsers) == 0 {
+		return nil
+	}
+
+	err = c.repo.AddMemberToConversation(newUsers, conversationID)
+	if err != nil {
+		return err
+
+	}
+
+	return nil
+}
+func (c *conversationService) RemoveMenberConversation(ConversationID string, UserID string) error {
+	if ConversationID == "" {
+		return errors.New("no conversation ID specified")
+	}
+	if UserID == "" {
+		return errors.New("no user ID specified")
+	}
+	conversation, err := c.repo.GetByID(ConversationID)
+	if err != nil {
+		return errors.New("No conversation with ID " + ConversationID)
+	}
+	var UsersUpdate []models.Users
+	userFound := false
+	for _, user := range conversation.Users {
+		if user.UserID == UserID {
+			userFound = true
+			continue
+		}
+		UsersUpdate = append(UsersUpdate, user)
+
+	}
+	if !userFound {
+		return errors.New("User not found in conversation list.")
+
+	}
+	conversation.Users = UsersUpdate
+	conversation.UpdatedAt = time.Now()
+	err = c.repo.UpdateRemoveruser(conversation)
+	if err != nil {
+		return errors.New("Failed to update conversation")
+	}
+	return nil
+}
+func (cs *conversationService) SendMessage(conversationID, userID string, content models.ChatContent) error {
+	user, err := cs.userRepo.GetByID(userID)
 	if err != nil {
 		return err
 	}
 
+	newMessage := models.Chat{
+		ID: primitive.NewObjectID(),
+		Sender: models.Users{
+			UserID:   user.ID,
+			Fullname: user.FullName,
+			Avatar:   user.Avatar,
+		},
+		Content:   content,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Status:    "sent",
+	}
+
+	// Lưu tin nhắn vào database
+	err = cs.repo.AddMessageToConversation(newMessage, conversationID)
+	if err != nil {
+		return err
+	}
+
+	// // Phát tin nhắn qua WebSocket tới tất cả các client trong Group
+	// messageData, err := json.Marshal(newMessage)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// if group, ok := cs.websocketGroups[conversationID]; ok {
+	// 	log.Println("Broadcasting message to WebSocket group:", conversationID)
+	// 	group.BroadcastMessage(messageData)
+	// } else {
+	// 	log.Println("No WebSocket group found for conversationID:", conversationID)
+	// }
+
 	return nil
+}
+func (s *conversationService) GetMessages(conversationID string) ([]models.Chat, error) {
+	return s.repo.GetMessagesByConversationID(conversationID)
+}
+
+func (s *conversationService) MarkMessageAsDeleted(conversationID string, messageID string) error {
+	return s.repo.MarkMessageAsDeleted(conversationID, messageID)
 }
