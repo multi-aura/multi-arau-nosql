@@ -12,7 +12,7 @@ function Layout({ children, userData }) {
 
         <div className="col-10 bg-dark d-flex flex-column p-0">
           <Header userData={userData} />
-          <div className="content-area bg-dark flex-grow-1 p-1">
+          <div className="content-area bg-black flex-grow-1 p-1">
             {children}
           </div>
         </div>

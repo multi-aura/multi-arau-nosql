@@ -38,7 +38,7 @@ function Post({ post }) {
         ))}
       </div>
       <div className="d-flex mt-3">
-        <input type="text" className="form-control" placeholder="Add a comment..." />
+        <input type="text" className="form-control comment-text" placeholder="Add a comment..." />
         <button className="btn btn-primary ml-2">Post</button>
       </div>
     </div>

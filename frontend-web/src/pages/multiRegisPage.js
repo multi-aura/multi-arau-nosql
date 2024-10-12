@@ -15,6 +15,7 @@ function RegisterPage() {
           />
         </div>
         <div className="col-md-6 register-right">
+          
           <MultiStepRegisterForm />
         </div>
       </div>

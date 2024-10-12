@@ -14,12 +14,18 @@ function Homepage() {
     const authToken = Cookies.get('authToken'); 
     useEffect(() => {
       if (!authToken) {
+        localStorage.removeItem('activeTab');
         navigate('/');
       } else if (location.state && location.state.userData) {
         setUserData(location.state.userData);
+        localStorage.setItem('user', JSON.stringify(location.state.userData));
+      } else {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          setUserData(JSON.parse(storedUser));
+        }
       }
     }, [authToken, location, navigate]);
-    
     return (
       <Layout userData={userData}>
        <Feed />

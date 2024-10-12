@@ -1,0 +1,38 @@
+.list-group-item:hover {
+  background-color: #555555; 
+}
+.friend-item {
+  margin-bottom: 5px; 
+  padding: 10px;
+  border-radius: 8px; 
+  background-color: #1f1f1f; 
+}
+
+.btn-dark {
+  background-color: #007bff; 
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+}
+
+.btn-dark:hover {
+  background-color: #0056b3; 
+}
+
+h5 {
+  color: #ffffff; 
+}
+
+.text {
+  color: #030303; 
+}
+.btn {
+    padding: 0.5rem 1.5rem;
+    display: inline-flex;
+    align-items: center; 
+}
+  
+.btn .fa-user-friends {
+    margin-left: 10px; 
+    font-size: 1rem; 
+  }

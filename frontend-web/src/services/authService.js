@@ -3,6 +3,8 @@ import { API_URL } from '../config/config';
 import Cookies from 'js-cookie';
 export const login = async (username, password) => {
   try {
+    Cookies.remove('authToken');
+    localStorage.removeItem('user');
     const response = await axios.post(`${API_URL}/user/login`, {
       username,
       password,
@@ -13,7 +15,8 @@ export const login = async (username, password) => {
       secure: process.env.NODE_ENV === 'production', 
       sameSite: 'Strict', 
     });
-    sessionStorage.setItem('user', response.data.data);
+    localStorage.setItem('user', JSON.stringify(response.data.data));
+
 
     return response.data.data; 
   } catch (error) {
@@ -21,6 +24,6 @@ export const login = async (username, password) => {
     throw error; 
   }
 };
-export const register = async (username, email, phone, password) => {
-  return axios.post('/api/register', { username, email, phone, password });
+export const register = async (formData) => {
+  return axios.post('/user/register', formData);  
 };

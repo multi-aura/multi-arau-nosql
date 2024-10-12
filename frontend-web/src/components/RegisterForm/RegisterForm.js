@@ -12,10 +12,10 @@ function RegisterForm({ handleRegister }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-
+  const [birthday, setErrorbirthday] = useState('')
   const onSubmit = (e) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       setErrorMessage('Mật khẩu và mật khẩu xác nhận không khớp.');
       return;
@@ -32,45 +32,45 @@ function RegisterForm({ handleRegister }) {
   return (
     <form onSubmit={onSubmit} className="custom-register-form">
       <h2 className="form-title text-center mb-4">Register</h2>
-      
+
       {errorMessage && <p className="text-danger text-center">{errorMessage}</p>} {/* Hiển thị thông báo lỗi */}
 
-      <CustomInput 
+      <CustomInput
         type="text"
         label="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         icon={faUser}
       />
-      <CustomInput 
+      <CustomInput
         type="email"
         label="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        icon={faEnvelope} 
+        icon={faEnvelope}
       />
-      <CustomInput 
+      <CustomInput
         type="text"
         label="Phone"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
-        icon={faPhone} 
+        icon={faPhone}
       />
-      <CustomInput 
+      <CustomInput
         type="password"
         label="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        icon={faLock} 
+        icon={faLock}
       />
-      <CustomInput 
+      <CustomInput
         type="password"
         label="Confirm Password"
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
-        icon={faLock}  
+        icon={faLock}
       />
-      
+
       <button type="submit" className="custom-button w-100">Register</button>
     </form>
   );

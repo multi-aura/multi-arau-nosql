@@ -107,7 +107,7 @@ func (c *conversationService) GetListConversations(id string) ([]models.Conversa
 
 }
 
-func (c *conversationService) AddMembers(conversationID string, userIDs []string) error {
+func (c *conversationService) AddMember(conversationID string, userIDs []string) error {
 
 	var users []models.Users
 	for _, userID := range userIDs {

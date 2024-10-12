@@ -19,6 +19,8 @@ function MultiStepRegisterForm() {
     province: '',
     gender: '',
   });
+  console.log(formData);
+  
   
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
@@ -41,6 +43,7 @@ function MultiStepRegisterForm() {
   const handleRegister = async () => {
     try {
       const response = await register(formData);
+      console.log(formData);
       console.log('Đăng ký thành công:', response);
       navigate('/Home', { state: { userData: response } });
     } catch (error) {
