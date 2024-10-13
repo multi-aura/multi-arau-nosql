@@ -7,7 +7,7 @@ const FriendList = ({ friends, isLoading }) => {
   }
 
   if (friends.length === 0) {
-    return <p>Không có bạn bè</p>; 
+    return <p>No friends found. Try searching or adding new friends!</p>;
   }
 
 

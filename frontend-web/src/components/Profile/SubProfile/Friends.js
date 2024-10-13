@@ -32,7 +32,7 @@ function FriendsList() {
     <div>
       
       <SearchBar searchTerm={searchTerm} onSearch={handleSearch} />
-
+    
       <FriendList friends={filteredFriends} isLoading={isLoading}/>
     </div>
   );

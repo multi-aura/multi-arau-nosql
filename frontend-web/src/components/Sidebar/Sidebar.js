@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import './Sidebar.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faSearch, faCommentDots, faBell, faUser } from '@fortawesome/free-solid-svg-icons'; 
+import { faHome, faThLarge , faCommentDots, faBell, faUser } from '@fortawesome/free-solid-svg-icons'; 
 
 function Sidebar() {
   const location = useLocation();
@@ -30,10 +30,10 @@ function Sidebar() {
         <li className="nav-item">
           <a 
             className={`tab-link ${activeTab === '#search' ? 'active' : ''}`} 
-            href="#search" 
+            href="/explore" 
             onClick={() => handleTabClick('#search')}
           >
-            <FontAwesomeIcon icon={faSearch} /> Search
+            <FontAwesomeIcon icon={faThLarge} /> Explore
           </a>
         </li>
         <li className="nav-item">
