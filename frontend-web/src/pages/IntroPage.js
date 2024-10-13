@@ -1,12 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../assets/css/IntroPage.css'; // CSS tùy chỉnh cho trang Intro
+import Cookies from 'js-cookie';
+import '../assets/css/IntroPage.css';
 
 function IntroPage() {
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    const authToken = Cookies.get('authToken');
+    
+    if (authToken) {
+      navigate('/home');
+    }
+  }, [navigate]);
 
   const handleStart = () => {
-    navigate('/login'); // Chuyển hướng đến trang đăng nhập
+    navigate('/login');
   };
 
   return (
