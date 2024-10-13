@@ -1,10 +1,12 @@
 import React from 'react';
-
-function Introduce() {
+import Introducedetail from '../../Introduce/Introduce';
+function Introduce({ userData }) {
+  if (!userData) {
+    return <div>Loading...</div>;
+  }
   return (
     <div>
-      <h3>Introduce</h3>
-      {/* Nội dung phần giới thiệu */}
+      <Introducedetail userData={userData} /> 
     </div>
   );
 }

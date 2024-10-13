@@ -44,7 +44,7 @@ function MyProfile() {
       case 'posts':
         return <Posts />;
       case 'introduce':
-        return <Introduce />;
+        return <Introduce userData={userData} />;
       case 'friends':
         return <Friends />;
       case 'images':

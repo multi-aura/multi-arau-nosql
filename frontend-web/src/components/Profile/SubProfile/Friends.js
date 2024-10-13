@@ -5,6 +5,7 @@ import SearchBar from '../../Search/SearchBar';
 function FriendsList() {
   const [friends, setFriends] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const fetchFriends = async () => {
       try {
@@ -12,6 +13,8 @@ function FriendsList() {
         setFriends(friendsList); 
       } catch (error) {
         console.error('Lỗi khi lấy danh sách bạn bè:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -30,7 +33,7 @@ function FriendsList() {
       
       <SearchBar searchTerm={searchTerm} onSearch={handleSearch} />
 
-      <FriendList friends={filteredFriends} />
+      <FriendList friends={filteredFriends} isLoading={isLoading}/>
     </div>
   );
 }
