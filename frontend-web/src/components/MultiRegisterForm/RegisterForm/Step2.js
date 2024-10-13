@@ -6,7 +6,7 @@ import { faUser, faPhone, faGlobe, faMapMarkerAlt, faCalendarAlt, faVenusMars } 
 function Step2({ formData, onFormChange, onPrev, onSubmit }) {
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(); // Gửi dữ liệu đăng ký
+    onSubmit(); 
   };
 
   return (
@@ -29,7 +29,7 @@ function Step2({ formData, onFormChange, onPrev, onSubmit }) {
       />
       <CustomInput 
         type="date"
-        label="Birthday"
+        label="birthday"
         value={formData.birthday}
         onChange={(e) => onFormChange('birthday', e.target.value)}
         icon={faCalendarAlt}

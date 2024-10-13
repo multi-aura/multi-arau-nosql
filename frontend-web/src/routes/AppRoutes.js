@@ -5,6 +5,7 @@ import HomePage from '../pages/Homepage';
 import RegisterPage from '../pages/RegisterPage';
 import MulRegisterPage from '../pages/multiRegisPage';
 import IntroPage from '../pages/IntroPage';
+import Myprofile from '../pages/Myprofile';
 function AppRoutes() {
   return (
     <Routes>
@@ -14,7 +15,7 @@ function AppRoutes() {
         <Route path="/Home" element={<HomePage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/mulregister" element={<MulRegisterPage />} />
-
+        <Route path="/profile" element={<Myprofile />} />
     </Routes>
   
   );
