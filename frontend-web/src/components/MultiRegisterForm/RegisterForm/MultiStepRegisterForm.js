@@ -19,8 +19,6 @@ function MultiStepRegisterForm() {
     province: '',
     gender: '',
   });
-  console.log(formData);
-  
   
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
@@ -36,21 +34,28 @@ function MultiStepRegisterForm() {
   const handleFormChange = (inputName, value) => {
     setFormData({
       ...formData,
-      [inputName]: value,
+      [inputName]: value, // Cập nhật đúng từng trường trong formData
     });
   };
+  
 
   const handleRegister = async () => {
+    debugger;
     try {
-      const response = await register(formData);
-      console.log(formData);
+
+      const { fullname, username, email, password, phone, birthday, nation, province, gender } = formData;
+  
+      const response = await register(fullname, username, email, password, phone, birthday, nation, province, gender);
+      
       console.log('Đăng ký thành công:', response);
-      navigate('/Home', { state: { userData: response } });
+      navigate('/Home', { state: { userData: response.data } });
+
     } catch (error) {
       console.error('Lỗi đăng ký:', error);
       setErrorMessage('Đăng ký thất bại. Vui lòng thử lại.');
     }
   };
+  
 
   return (
     <div className="multi-step-register-form">
@@ -66,6 +71,7 @@ function MultiStepRegisterForm() {
 
       {currentStep === 2 && (
         <Step2 
+        
           formData={formData} 
           onFormChange={handleFormChange} 
           onPrev={handlePrevStep} 

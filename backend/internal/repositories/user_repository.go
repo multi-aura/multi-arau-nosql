@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"errors"
-	"log"
 	"multiaura/internal/databases"
 	"multiaura/internal/models"
 	"time"
@@ -15,6 +14,7 @@ import (
 type UserRepository interface {
 	Repository[models.User]
 	GetUsersByName(name string) ([]models.User, error)
+	GetUserSummaryByID(id string) (*models.UserSummary, error)
 	GetUserByEmail(email string) (*models.User, error)
 	GetUserByPhone(phone string) (*models.User, error)
 	GetUserByUsername(username string) (*models.User, error)
@@ -73,6 +73,42 @@ func (repo *userRepository) GetByID(id string) (*models.User, error) {
 	return nil, errors.New("user with id " + id + " not found")
 }
 
+func (repo *userRepository) GetUserSummaryByID(id string) (*models.UserSummary, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
+
+	result, err := session.Run(ctx, "MATCH (u:User {userID: $userID, isActive: true}) RETURN u.userID, u.fullname, u.username, u.avatar, u.isActive", map[string]interface{}{
+		"userID": id,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Next(ctx) {
+		record := result.Record()
+		userSummary := &models.UserSummary{}
+		if userIDVal, ok := record.Get("u.userID"); ok {
+			userSummary.ID = userIDVal.(string)
+		}
+		if fullnameVal, ok := record.Get("u.fullname"); ok {
+			userSummary.FullName = fullnameVal.(string)
+		}
+		if usernameVal, ok := record.Get("u.username"); ok {
+			userSummary.Username = usernameVal.(string)
+		}
+		if avatarVal, ok := record.Get("u.avatar"); ok {
+			userSummary.Avatar = avatarVal.(string)
+		}
+		if isActive, ok := record.Get("u.isActive"); ok {
+			userSummary.IsActive = isActive.(bool)
+		}
+		return userSummary, nil
+	}
+
+	return nil, errors.New("user with id " + id + " not found")
+}
+
 func (repo *userRepository) Create(user models.User) error {
 	ctx := context.Background()
 	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
@@ -116,7 +152,7 @@ func (repo *userRepository) Update(entityMap *map[string]interface{}) error {
 	userProps := make(map[string]interface{})
 
 	for key, value := range *entityMap {
-		if key != "userID" { // Không thêm userID vào userProps
+		if key != "userID" {
 			userProps[key] = value
 		}
 	}
@@ -130,7 +166,6 @@ func (repo *userRepository) Update(entityMap *map[string]interface{}) error {
 	)
 
 	if err != nil {
-		log.Println(err.Error())
 		return err
 	}
 
@@ -740,6 +775,9 @@ func (repo *userRepository) GetFollowers(userID string) ([]*models.UserSummary, 
 			if avatarVal, ok := record.Get("avatar"); ok {
 				followerUser.Avatar = avatarVal.(string)
 			}
+			if isActive, ok := record.Get("isActive"); ok {
+				followerUser.IsActive = isActive.(bool)
+			}
 
 			followers = append(followers, followerUser)
 		}
@@ -798,6 +836,9 @@ func (repo *userRepository) GetFollowings(userID string) ([]*models.UserSummary,
 			if avatarVal, ok := record.Get("avatar"); ok {
 				followingUser.Avatar = avatarVal.(string)
 			}
+			if isActive, ok := record.Get("isActive"); ok {
+				followingUser.IsActive = isActive.(bool)
+			}
 
 			followings = append(followings, followingUser)
 		}
@@ -821,12 +862,12 @@ func (repo *userRepository) GetFollowings(userID string) ([]*models.UserSummary,
 }
 
 func (repo *userRepository) GetRelationship(targetUserID, userID string) (models.RelationshipStatus, error) {
-    ctx := context.Background()
-    session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
-    defer session.Close(ctx)
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
 
-    result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-        query := `
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		query := `
             MATCH (u1:User {userID: $targetUserID}), (u2:User {userID: $userID})
             OPTIONAL MATCH (u1)-[r1:FOLLOWS]->(u2)
             OPTIONAL MATCH (u2)-[r2:FOLLOWS]->(u1)
@@ -852,58 +893,58 @@ func (repo *userRepository) GetRelationship(targetUserID, userID string) (models
                 ) AS since
         `
 
-        // Thực hiện truy vấn
-        record, err := tx.Run(ctx, query, map[string]interface{}{
-            "userID":       userID,
-            "targetUserID": targetUserID,
-        })
+		// Thực hiện truy vấn
+		record, err := tx.Run(ctx, query, map[string]interface{}{
+			"userID":       userID,
+			"targetUserID": targetUserID,
+		})
 
-        if err != nil {
-            return nil, err
-        }
+		if err != nil {
+			return nil, err
+		}
 
-        if record.Next(ctx) {
-            recordData := record.Record()
+		if record.Next(ctx) {
+			recordData := record.Record()
 
-            relationshipStatus, _ := recordData.Get("status")
-            since, _ := recordData.Get("since")
+			relationshipStatus, _ := recordData.Get("status")
+			since, _ := recordData.Get("since")
 
-            var status models.RelationshipStatusType
+			var status models.RelationshipStatusType
 
-            switch relationshipStatus.(string) {
-            case "BLOCKING":
-                status = models.IsBlocking
-            case "BLOCKED_BY":
-                status = models.IsBlockedBy
-            case "FRIEND":
-                status = models.IsFriend
-            case "FOLLOWING":
-                status = models.IsFollowing
-            case "FOLLOWED_BY":
-                status = models.IsFollowedBy
-            default:
-                status = models.NoRelationship
-            }
+			switch relationshipStatus.(string) {
+			case "BLOCKING":
+				status = models.IsBlocking
+			case "BLOCKED_BY":
+				status = models.IsBlockedBy
+			case "FRIEND":
+				status = models.IsFriend
+			case "FOLLOWING":
+				status = models.IsFollowing
+			case "FOLLOWED_BY":
+				status = models.IsFollowedBy
+			default:
+				status = models.NoRelationship
+			}
 
-            var sinceTime *time.Time
-            if since != nil {
-                if sinceTimeValue, ok := since.(time.Time); ok {
-                    sinceTime = &sinceTimeValue
-                }
-            }
+			var sinceTime *time.Time
+			if since != nil {
+				if sinceTimeValue, ok := since.(time.Time); ok {
+					sinceTime = &sinceTimeValue
+				}
+			}
 
-            return models.RelationshipStatus{
-                Status: status,
-                Since:  sinceTime,
-            }, nil
-        }
+			return models.RelationshipStatus{
+				Status: status,
+				Since:  sinceTime,
+			}, nil
+		}
 
-        return models.RelationshipStatus{}, errors.New("no relationship data found")
-    })
+		return models.RelationshipStatus{}, errors.New("no relationship data found")
+	})
 
-    if err != nil {
-        return models.RelationshipStatus{}, err
-    }
+	if err != nil {
+		return models.RelationshipStatus{}, err
+	}
 
-    return result.(models.RelationshipStatus), nil
+	return result.(models.RelationshipStatus), nil
 }

@@ -15,7 +15,7 @@ type (
 
 	Chat struct {
 		ID        primitive.ObjectID `json:"id_chat" bson:"id_chat,omitempty" form:"id_chat,omitempty"`
-		Sender    User               `json:"sender" bson:"sender" form:"sender"`
+		Sender    Users              `json:"sender" bson:"sender" form:"sender"`
 		Content   ChatContent        `json:"content" bson:"content" form:"content"`
 		Emotion   []string           `json:"emotion" bson:"emotion,omitempty" form:"emotion,omitempty"`
 		CreatedAt time.Time          `json:"createdat" bson:"createdat" form:"createdat"`
@@ -37,12 +37,5 @@ type (
 	SeenBy struct {
 		UserID primitive.ObjectID `json:"user_id" bson:"user_id" form:"user_id"`
 		SeenAt time.Time          `json:"seen_at" bson:"seen_at" form:"seen_at"`
-	}
-
-	Users struct {
-		UserID   string    `json:"user_id" bson:"user_id" form:"user_id"`
-		Fullname string    `json:"fullname" bson:"fullname" form:"fullname"`
-		Avatar   string    `json:"avatar" bson:"avatar" form:"avatar"`
-		LastSeen time.Time `json:"last_seen" bson:"last_seen" form:"last_seen"`
 	}
 )
