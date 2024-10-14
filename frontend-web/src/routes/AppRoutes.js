@@ -7,6 +7,8 @@ import MulRegisterPage from '../pages/multiRegisPage';
 import IntroPage from '../pages/IntroPage';
 import Myprofile from '../pages/Myprofile';
 import Explore from '../pages/Explore';
+import Chat from '../pages/ChatPage';
+
 function AppRoutes() {
   return (
     <Routes>
@@ -18,6 +20,7 @@ function AppRoutes() {
         <Route path="/mulregister" element={<MulRegisterPage />} />
         <Route path="/profile" element={<Myprofile />} />
         <Route path="/explore" element={<Explore />} />
+        <Route path="/chat" element={<Chat />} />
 
     </Routes>
   

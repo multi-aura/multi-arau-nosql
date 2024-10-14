@@ -39,7 +39,7 @@ function Sidebar() {
         <li className="nav-item">
           <a 
             className={`tab-link ${activeTab === '#messages' ? 'active' : ''}`} 
-            href="#messages" 
+            href="/chat" 
             onClick={() => handleTabClick('#messages')}
           >
             <FontAwesomeIcon icon={faCommentDots} /> Messages

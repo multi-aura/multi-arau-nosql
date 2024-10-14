@@ -18,9 +18,7 @@ const SearchBar = ({ searchTerm, onSearch }) => {
           onChange={(e) => onSearch(e.target.value)}
         />
       </div>
-      <button className="btn text-white">      
-      <FontAwesomeIcon icon={faUser} className="me-2" />
-      Follows</button>
+      
     </div>
   );
 };
