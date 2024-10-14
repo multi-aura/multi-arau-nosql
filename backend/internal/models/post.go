@@ -29,11 +29,6 @@ type CreatePostRequest struct {
 	Images      []Image `bson:"images" json:"images" form:"images"`
 }
 
-type GetRecentPostsRequest struct {
-	Limit int64 `json:"limit"`
-	Page  int64 `json:"page"`
-}
-
 func (p *Post) ToMap() map[string]interface{} {
 	images := make([]map[string]interface{}, len(p.Images))
 	for i, img := range p.Images {

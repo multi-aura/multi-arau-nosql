@@ -32,6 +32,8 @@ type UserRepository interface {
 	GetFollowers(userID string) ([]*models.UserSummary, error)
 	GetFollowings(userID string) ([]*models.UserSummary, error)
 	GetRelationship(targetUserID, userID string) (models.RelationshipStatus, error)
+	Search(userID, query string, page, limit int) ([]*models.OtherUser, error)
+	GetSuggestedFriends(userID string, page, limit int) ([]*models.OtherUser, error)
 }
 
 type userRepository struct {
@@ -947,4 +949,126 @@ func (repo *userRepository) GetRelationship(targetUserID, userID string) (models
 	}
 
 	return result.(models.RelationshipStatus), nil
+}
+
+func (repo *userRepository) Search(userID, query string, page, limit int) ([]*models.OtherUser, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		// Tính số lượng bản ghi cần bỏ qua (skip) dựa trên trang và limit
+		skip := (page - 1) * limit
+
+		searchQuery := `
+			MATCH (u:User)
+			WHERE (u.fullname CONTAINS $query OR u.username CONTAINS $query)
+				AND u.userID <> $currentUserID
+				AND NOT EXISTS {
+					MATCH (u)-[:BLOCKED]-(b:User {userID: $currentUserID})
+				}
+			RETURN u
+			SKIP $skip
+			LIMIT $limit
+		`
+
+		// Thực thi truy vấn với tham số phân trang
+		records, err := tx.Run(ctx, searchQuery, map[string]interface{}{
+			"query":         query,
+			"currentUserID": userID,
+			"skip":          skip,
+			"limit":         limit,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var otherUsers []*models.OtherUser
+
+		// Duyệt qua kết quả trả về
+		for records.Next(ctx) {
+			record := records.Record()
+			otherUserNode, _ := record.Get("u")
+			otherUser := &models.OtherUser{}
+			otherUserNodeProps := otherUserNode.(neo4j.Node).Props
+
+			otherUser, err = otherUser.FromMap(otherUserNodeProps)
+			if err != nil {
+				return nil, errors.New("error converting map to User")
+			}
+
+			otherUsers = append(otherUsers, otherUser)
+		}
+
+		return otherUsers, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	users := result.([]*models.OtherUser)
+	return users, nil
+}
+
+func (repo *userRepository) GetSuggestedFriends(userID string, page, limit int) ([]*models.OtherUser, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeRead,
+	})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		query := `
+			MATCH (me:User {userID: $userID})
+			OPTIONAL MATCH (me)-[:FOLLOWS|FRIEND_WITH]-(friend:User)
+			WITH me, COUNT(friend) AS friendCount
+			MATCH (fof:User)
+			WHERE fof.userID <> me.userID
+				AND NOT (me)-[:BLOCKED]-(fof)
+				AND NOT (me)-[:FOLLOWS|FRIEND_WITH]->(fof)
+			RETURN fof, friendCount
+			ORDER BY
+				friendCount DESC,
+				CASE WHEN fof.province = me.province THEN 0 ELSE 1 END,
+				CASE WHEN fof.nation = me.nation THEN 0 ELSE 1 END
+			SKIP $skip
+            LIMIT $limit
+        `
+		skip := (page - 1) * limit
+
+		records, err := tx.Run(ctx, query, map[string]interface{}{
+			"userID": userID,
+			"skip":   skip,
+			"limit":  limit,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var suggestedUsers []*models.OtherUser
+
+		for records.Next(ctx) {
+			record := records.Record()
+			otherUserNode, _ := record.Get("fof")
+			otherUser := &models.OtherUser{}
+			otherUserNodeProps := otherUserNode.(neo4j.Node).Props
+
+			otherUser, err = otherUser.FromMap(otherUserNodeProps)
+			if err != nil {
+				return nil, errors.New("error converting map to UserSummary")
+			}
+
+			suggestedUsers = append(suggestedUsers, otherUser)
+		}
+
+		return suggestedUsers, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	users := result.([]*models.OtherUser)
+	return users, nil
 }
