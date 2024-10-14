@@ -1,0 +1,33 @@
+.sidebar-container {
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid #949494;
+  background-color: #000000;
+  color: #fff;
+  width: 100%;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  border-bottom: 1px solid #333;
+}
+
+.message-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+.sidebar-header select {
+  width: 120px; 
+  font-size: 15px;
+  font-weight: lighter;
+  padding: 5px;
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+}
