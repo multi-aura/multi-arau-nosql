@@ -1,19 +1,23 @@
 import React, { useState } from 'react';
+import { FaSearch } from 'react-icons/fa'; // Thư viện react-icons để dùng icon kính lúp
 import MessageItem from '../MessageItem/MessageItem';
 import './SidebarChat.css';
 
-function SidebarChat({ messages, onSelectChat }) {
+
+function SidebarChat({ messages = [], onSelectChat }) {  
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('All'); // All, Group, Single
+  const [isSearchVisible, setSearchVisible] = useState(false); // State để kiểm soát hiển thị input
 
-  const [filterType, setFilterType] = useState('All'); 
-
-  const filteredMessages = messages
-    .filter(message => message.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredMessages = (messages || [])
+    .filter(message => 
+      message.name_conversation && 
+      message.name_conversation.toLowerCase().includes(searchTerm.toLowerCase())) 
     .filter(message => {
       if (filterType === 'Group') {
-        return message.type === 'group';
+        return message.conversation_type === 'Group'; 
       } else if (filterType === 'Single') {
-        return message.type === 'single'; 
+        return message.conversation_type === 'Private'; 
       }
       return true; 
     });
@@ -21,7 +25,27 @@ function SidebarChat({ messages, onSelectChat }) {
   return (
     <div className="sidebar-container">
       <div className="sidebar-header">
-        <h5>Messages</h5>
+      <h5 style={{ color: "white" }}>Messages</h5>
+
+
+        {!isSearchVisible && (
+          <FaSearch 
+            className="search-icon" 
+            onClick={() => setSearchVisible(true)} 
+          />
+        )}
+
+        {isSearchVisible && (
+          <input 
+            type="text" 
+            className="form-control search-input"
+            placeholder="Search..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)} 
+            onBlur={() => setSearchVisible(false)} // Ẩn lại khi mất focus
+          />
+        )}
+
         <select 
           className="form-select" 
           value={filterType} 
@@ -33,15 +57,18 @@ function SidebarChat({ messages, onSelectChat }) {
         </select>
       </div>
 
-
       <ul className="message-list">
-        {filteredMessages.map((message, index) => (
-          <MessageItem 
-            key={index} 
-            message={message} 
-            onClick={() => onSelectChat(message)} 
-          />
-        ))}
+        {filteredMessages.length > 0 ? (
+          filteredMessages.map((message, index) => (
+            <MessageItem 
+              key={index} 
+              message={message} 
+              onClick={() => onSelectChat(message)} 
+            />
+          ))
+        ) : (
+          <li className="no-messages">No messages found</li>
+        )}
       </ul>
     </div>
   );
