@@ -15,7 +15,7 @@ type PostService interface {
 	CreatePost(post *models.CreatePostRequest) error
 	UpdatePost(id string, updates *map[string]interface{}) error
 	DeletePost(id string) error
-	GetRecentPosts(userID string, limit int64, page int64) (*[]models.Post, error)
+	GetRecentPosts(userID string, limit int64, page int64) ([]*models.Post, error)
 }
 
 type postService struct {
@@ -87,7 +87,7 @@ func (s *postService) DeletePost(id string) error {
 	return nil
 }
 
-func (s *postService) GetRecentPosts(userID string, limit int64, page int64) (*[]models.Post, error) {
+func (s *postService) GetRecentPosts(userID string, limit int64, page int64) ([]*models.Post, error) {
 	followings, err := s.userRepo.GetFollowings(userID)
 	if err != nil {
 		return nil, errors.New("failed to fetch followings: " + err.Error())
