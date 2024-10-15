@@ -16,10 +16,18 @@ func SetupSearchRoutes(app *fiber.App) {
 	controller := controllers.NewSearchController(service)
 
 	search := app.Group("/search")
-	search.Get("/people", middlewares.AuthMiddleware(), controller.SearchPeople)
-	search.Get("/people/:q", middlewares.AuthMiddleware(), controller.SearchPeople)
-	search.Get("/posts/:q", middlewares.AuthMiddleware(), controller.SearchPosts)
-	search.Get("/trending/:q", middlewares.AuthMiddleware(), controller.SearchTrending)
-	search.Get("/for-you/:q", middlewares.AuthMiddleware(), controller.SearchForYou)
-	search.Get("/news/:q", middlewares.AuthMiddleware(), controller.SearchNews)
+	search.Post("/people", middlewares.AuthMiddleware(), controller.SearchPeople)
+	search.Post("/people/:q", middlewares.AuthMiddleware(), controller.SearchPeople)
+
+	search.Post("/posts", middlewares.AuthMiddleware(), controller.SearchPosts)
+	search.Post("/posts/:q", middlewares.AuthMiddleware(), controller.SearchPosts)
+
+	search.Post("/trending", middlewares.AuthMiddleware(), controller.SearchTrending)
+	search.Post("/trending/:q", middlewares.AuthMiddleware(), controller.SearchTrending)
+
+	search.Post("/for-you", middlewares.AuthMiddleware(), controller.SearchForYou)
+	search.Post("/for-you/:q", middlewares.AuthMiddleware(), controller.SearchForYou)
+
+	search.Post("/news", middlewares.AuthMiddleware(), controller.SearchNews)
+	search.Post("/news/:q", middlewares.AuthMiddleware(), controller.SearchNews)
 }

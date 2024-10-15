@@ -17,16 +17,33 @@ func NewSearchController(service services.SearchService) *SearchController {
 }
 
 func (sc *SearchController) SearchNews(c *fiber.Ctx) error {
-	query := c.Query("q")
-	if query == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
-			Status:  fiber.StatusBadRequest,
-			Message: "Query string 'q' is missing",
-			Error:   "BadRequest",
+	userID, ok := c.Locals("userID").(string)
+	if !ok || userID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusUnauthorized,
+			Message: "Unauthorized",
+			Error:   "StatusUnauthorized",
 		})
 	}
 
-	products, err := sc.service.SearchNews("", query)
+	query := c.Query("q")
+	var req models.PagingRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusBadRequest,
+			Message: "Invalid request body",
+			Error:   "StatusBadRequest",
+		})
+	}
+
+	if req.Limit <= 0 {
+		req.Limit = 10 // Mặc định limit là 10 nếu không cung cấp hoặc không hợp lệ
+	}
+	if req.Page <= 0 {
+		req.Page = 1 // Mặc định page là 1 nếu không cung cấp hoặc không hợp lệ
+	}
+
+	products, err := sc.service.SearchNews(userID, query, int(req.Page), int(req.Limit))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
 			Status:  fiber.StatusInternalServerError,
@@ -102,20 +119,37 @@ func (sc *SearchController) SearchPeople(c *fiber.Ctx) error {
 }
 
 func (sc *SearchController) SearchPosts(c *fiber.Ctx) error {
-	query := c.Query("q")
-	if query == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
-			Status:  fiber.StatusBadRequest,
-			Message: "Query string 'q' is missing",
-			Error:   "BadRequest",
+	userID, ok := c.Locals("userID").(string)
+	if !ok || userID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusUnauthorized,
+			Message: "Unauthorized",
+			Error:   "StatusUnauthorized",
 		})
 	}
 
-	posts, err := sc.service.SearchPosts("", query)
+	query := c.Query("q")
+	var req models.PagingRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusBadRequest,
+			Message: "Invalid request body",
+			Error:   "StatusBadRequest",
+		})
+	}
+
+	if req.Limit <= 0 {
+		req.Limit = 10 // Mặc định limit là 10 nếu không cung cấp hoặc không hợp lệ
+	}
+	if req.Page <= 0 {
+		req.Page = 1 // Mặc định page là 1 nếu không cung cấp hoặc không hợp lệ
+	}
+
+	posts, err := sc.service.SearchPosts(userID, query, int(req.Page), int(req.Limit))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
 			Status:  fiber.StatusInternalServerError,
-			Message: "Failed to search posts",
+			Message: err.Error(),
 			Error:   "InternalServerError",
 		})
 	}
@@ -129,19 +163,27 @@ func (sc *SearchController) SearchPosts(c *fiber.Ctx) error {
 
 func (sc *SearchController) SearchTrending(c *fiber.Ctx) error {
 	query := c.Query("q")
-	if query == "" {
+	var req models.PagingRequest
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
 			Status:  fiber.StatusBadRequest,
-			Message: "Query string 'q' is missing",
-			Error:   "BadRequest",
+			Message: "Invalid request body",
+			Error:   "StatusBadRequest",
 		})
 	}
 
-	trendingItems, err := sc.service.SearchTrending("", query)
+	if req.Limit <= 0 {
+		req.Limit = 10 // Mặc định limit là 10 nếu không cung cấp hoặc không hợp lệ
+	}
+	if req.Page <= 0 {
+		req.Page = 1 // Mặc định page là 1 nếu không cung cấp hoặc không hợp lệ
+	}
+
+	trendingItems, err := sc.service.SearchTrending(query, int(req.Page), int(req.Limit))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
 			Status:  fiber.StatusInternalServerError,
-			Message: "Failed to search trending items",
+			Message: err.Error(),
 			Error:   "InternalServerError",
 		})
 	}
@@ -154,21 +196,38 @@ func (sc *SearchController) SearchTrending(c *fiber.Ctx) error {
 }
 
 func (sc *SearchController) SearchForYou(c *fiber.Ctx) error {
-	query := c.Query("q")
-	if query == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
-			Status:  fiber.StatusBadRequest,
-			Message: "Query string 'q' is missing",
-			Error:   "BadRequest",
+	userID, ok := c.Locals("userID").(string)
+	if !ok || userID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusUnauthorized,
+			Message: "Unauthorized",
+			Error:   "StatusUnauthorized",
 		})
 	}
 
-	forYouItems, err := sc.service.SearchForYou("", query)
+	query := c.Query("q")
+	var req models.PagingRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusBadRequest,
+			Message: "Invalid request body",
+			Error:   "StatusBadRequest",
+		})
+	}
+
+	if req.Limit <= 0 {
+		req.Limit = 10 // Mặc định limit là 10 nếu không cung cấp hoặc không hợp lệ
+	}
+	if req.Page <= 0 {
+		req.Page = 1 // Mặc định page là 1 nếu không cung cấp hoặc không hợp lệ
+	}
+
+	forYouItems, err := sc.service.SearchForYou(userID, query, int(req.Page), int(req.Limit))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
 			Status:  fiber.StatusInternalServerError,
-			Message: "Failed to search 'For You' items",
-			Error:   "InternalServerError",
+			Message: err.Error(),
+			Error:   "StatusInternalServerError",
 		})
 	}
 
