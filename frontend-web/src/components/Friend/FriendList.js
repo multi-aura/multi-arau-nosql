@@ -1,16 +1,14 @@
 import React from 'react';
 import FriendItem from './FriendItem';
 import './FriendList.css'
-const FriendList = ({ friends, isLoading }) => {
+const FriendList = ({ friends , isLoading }) => {
   if (isLoading) {
     return <p>Loading friends...</p>; 
   }
-
-  if (friends.length === 0) {
+  if (!friends || friends.length === 0) {
     return <p>No friends found. Try searching or adding new friends!</p>;
   }
-
-
+ 
   return (
     <ul className="list-group friend-list-container">
       {friends.map((friend) => (

@@ -23,11 +23,14 @@ function FriendsList() {
   const handleSearch = (term) => {
     setSearchTerm(term);
   };
+  
+  const filteredFriends = friends && friends.length > 0
+  ? friends.filter((friend) =>
+      friend.fullname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      friend.username.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  : [];
 
-  const filteredFriends = friends.filter((friend) =>
-    friend.fullname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    friend.username.toLowerCase().includes(searchTerm.toLowerCase())
-  );
   return (
     <div>
       
