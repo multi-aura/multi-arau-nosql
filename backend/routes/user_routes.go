@@ -10,7 +10,8 @@ import (
 )
 
 func SetupUserRoutes(app *fiber.App) {
-	repository := repositories.NewUserRepository(neo4jDB)
+	storageRepository := repositories.NewStorageRepository()
+	repository := repositories.NewUserRepository(neo4jDB, storageRepository)
 	service := services.NewUserService(repository)
 	controller := controllers.NewUserController(service)
 
