@@ -3,24 +3,23 @@ import './ProfileNav.css';
 
 function ProfileNav({ activeTab, onTabChange }) {
   return (
-    <div className="profile-nav">
-      <ul className="nav nav-tabs justify-content-center ">
-        <li className={`nav-item ${activeTab === 'posts' ? 'active' : ''}`} onClick={() => onTabChange('posts')}>
-          <a className="nav-link">Posts</a>
+    <div className="profile-nav__container">
+      <ul className="nav profile-nav__tabs justify-content-center" style={{paddingBottom:"5px"}} >
+        <li style={{ padding: "10px 0px" }} className={`profile-nav__item ${activeTab === 'posts' ? 'profile-nav__link--active' : ''}`} onClick={() => onTabChange('posts')}>
+          <a className="profile-nav__link ">Posts</a>
         </li>
-        <li className={`nav-item ${activeTab === 'introduce' ? 'active' : ''}`} onClick={() => onTabChange('introduce')}>
-          <a className="nav-link">Introduce</a>
+        <li style={{ padding: "10px 0px" }} className={`profile-nav__item ${activeTab === 'introduce' ? 'profile-nav__link--active' : ''}`} onClick={() => onTabChange('introduce')}>
+          <a className="profile-nav__link">Introduce</a>
         </li>
-        <li className={`nav-item ${activeTab === 'friends' ? 'active' : ''}`} onClick={() => onTabChange('friends')}>
-          <a className="nav-link">Friends</a>
+        <li style={{ padding: "10px 0px" }} className={`profile-nav__item ${activeTab === 'friends' ? 'profile-nav__link--active' : ''}`} onClick={() => onTabChange('friends')}>
+          <a className="profile-nav__link">Friends</a>
         </li>
-        <li className={`nav-item ${activeTab === 'images' ? 'active' : ''}`} onClick={() => onTabChange('images')}>
-          <a className="nav-link">Images</a>
+        <li style={{ padding: "10px 0px" }} className={`profile-nav__item ${activeTab === 'images' ? 'profile-nav__link--active' : ''}`} onClick={() => onTabChange('images')}>
+          <a className="profile-nav__link">Images</a>
         </li>
-        <li className={`nav-item ${activeTab === 'more' ? 'active' : ''}`} onClick={() => onTabChange('more')}>
-          <a className="nav-link">More...</a>
+        <li style={{ padding: "10px 0px" }} className={`profile-nav__item ${activeTab === 'more' ? 'profile-nav__link--active' : ''}`} onClick={() => onTabChange('more')}>
+          <a className="profile-nav__link">More...</a>
         </li>
-
       </ul>
     </div>
   );
