@@ -38,7 +38,7 @@ const FriendItem = ({ friend }) => {
           />
           <div>
             <h5 className="mb-0">{friend.fullname}</h5>
-            <small className="text">{friend.username}</small>
+            <small className="text-black">{friend.username}</small>
           </div>  
         </div>
         <button className="btn btn-dark d-flex align-items-center" onClick={handleToggleModal}>
