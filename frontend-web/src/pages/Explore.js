@@ -4,6 +4,8 @@ import TabMenu from '../components/Explore/TabMenu/TabMenu';
 import SuggestedUsers from '../components/Explore/SuggestedUser/ListSuggestedUsers';
 import Layout from '../layouts/Layout';
 import PeopleSearchResult from '../components/Explore/ExploreSubPage/PeopleSearchResult';
+import {getPeopleSuggestions } from '../services/searchService';
+
 import '../assets/css/Explore.css';
 
 function Explore() {
@@ -18,11 +20,17 @@ function Explore() {
       setUserData(JSON.parse(storedUser)); 
     }
 
-    const suggested = [
-      { id: 1, name: 'Nguyễn Huy Hoàng', avatar: 'https://firebasestorage.googleapis.com/v0/b/multi-aura.appspot.com/o/Hihon%2F1728534046_9ea1c9841cadbef3e7bc.jpg?alt=media&token=3d221a08-d064-4ece-881a-32e2c5d273e1' },
-      { id: 2, name: 'Kim Đinh', avatar: 'https://firebasestorage.googleapis.com/v0/b/multi-aura.appspot.com/o/Hihon%2F1728534046_9ea1c9841cadbef3e7bc.jpg?alt=media&token=3d221a08-d064-4ece-881a-32e2c5d273e1' }
-    ];
-    setSuggestedUsers(suggested);
+    const fetchSuggestedUsers = async () => {
+      try {
+        const result = await getPeopleSuggestions();
+        setSuggestedUsers(result.data);  
+        console.log(result.data)
+      } catch (error) {
+        console.error('Lỗi khi lấy đề xuất người dùng:', error);
+      }
+    };
+
+    fetchSuggestedUsers();
   }, []); 
 
   const renderContent = () => {

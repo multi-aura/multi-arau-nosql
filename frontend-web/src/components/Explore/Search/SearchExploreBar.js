@@ -1,21 +1,21 @@
-import React, { useState, useEffect  } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import './SearchExploreBar.css';
 import SearchResults from './SearchResults';
-import { searchPeople, getPeopleSuggestions} from '../../../services/searchService';
+import { searchPeople, getPeopleSuggestions } from '../../../services/searchService';
 
 const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
+
   useEffect(() => {
     const fetchSuggestions = async () => {
       try {
         const result = await getPeopleSuggestions(); 
-        console.log(result);
-        setSuggestions(result);
+        setSuggestions(result.data);  // Access data from the API response
       } catch (error) {
         console.error('Lỗi khi lấy gợi ý:', error);
       }
@@ -29,8 +29,7 @@ const SearchBar = () => {
       if (searchTerm) {
         try {
           const results = await searchPeople(searchTerm);
-          setSearchResults(results); 
-          console.log(results);
+          setSearchResults(results.data);  // Access data from the API response
         } catch (error) {
           console.error('Lỗi khi tìm kiếm:', error);
         }
