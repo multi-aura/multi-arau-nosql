@@ -31,6 +31,7 @@ type UserRepository interface {
 	GetFriends(userID string) ([]*models.User, error)
 	GetFollowers(userID string) ([]*models.UserSummary, error)
 	GetFollowings(userID string) ([]*models.UserSummary, error)
+	GetBlockedList(userID string) ([]string, error)
 	GetRelationship(targetUserID, userID string) (models.RelationshipStatus, error)
 	Search(userID, query string, page, limit int) ([]*models.OtherUser, error)
 	GetSuggestedFriends(userID string, page, limit int) ([]*models.OtherUser, error)
@@ -1071,4 +1072,49 @@ func (repo *userRepository) GetSuggestedFriends(userID string, page, limit int) 
 
 	users := result.([]*models.OtherUser)
 	return users, nil
+}
+
+func (repo *userRepository) GetBlockedList(userID string) ([]string, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeRead,
+	})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		records, err := tx.Run(ctx, `
+			MATCH (u:User{userID: $userID})-[r:BLOCKED]-(blocked:User)
+			RETURN blocked.userID AS userID
+		`, map[string]interface{}{
+			"userID": userID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var blockeds []string
+		for records.Next(ctx) {
+			record := records.Record()
+
+			if userIDVal, ok := record.Get("userID"); ok {
+				blockeds = append(blockeds, userIDVal.(string))
+			}
+		}
+
+		if err = records.Err(); err != nil {
+			return nil, err
+		}
+		return blockeds, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	blockedList, ok := result.([]string)
+	if !ok {
+		return nil, errors.New("failed to cast result to []*string")
+	}
+
+	return blockedList, nil
 }

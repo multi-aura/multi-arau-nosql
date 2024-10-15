@@ -48,6 +48,21 @@ func GetArray(data map[string]interface{}, key string) []interface{} {
 	return []interface{}{}
 }
 
+func GetArrayMap(data map[string]interface{}, key string) []map[string]interface{} {
+	if val, ok := data[key]; ok {
+		if array, ok := val.(primitive.A); ok {
+			result := make([]map[string]interface{}, len(array))
+			for i, v := range array {
+				if m, ok := v.(map[string]interface{}); ok {
+					result[i] = m
+				}
+			}
+			return result
+		}
+	}
+	return []map[string]interface{}{}
+}
+
 func GetTime(data map[string]interface{}, key string) time.Time {
 	if val, ok := data[key]; ok {
 		switch v := val.(type) {
@@ -66,6 +81,21 @@ func GetTime(data map[string]interface{}, key string) time.Time {
 func GetStringArray(data map[string]interface{}, key string) []string {
 	if val, ok := data[key]; ok {
 		if array, ok := val.([]interface{}); ok {
+			strArray := make([]string, len(array))
+			for i, v := range array {
+				if str, ok := v.(string); ok {
+					strArray[i] = str
+				}
+			}
+			return strArray
+		}
+	}
+	return []string{}
+}
+
+func GetStringArrayFromPrimitiveAMap(data map[string]interface{}, key string) []string {
+	if val, ok := data[key]; ok {
+		if array, ok := val.(primitive.A); ok {
 			strArray := make([]string, len(array))
 			for i, v := range array {
 				if str, ok := v.(string); ok {
