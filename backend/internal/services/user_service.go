@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"mime/multipart"
 	"multiaura/internal/models"
 	"multiaura/internal/repositories"
 	"multiaura/pkg/utils"
@@ -19,6 +20,8 @@ type UserService interface {
 	ForgotPassword(email string) error
 	ChangePassword(userID, oldPassword, newPassword string) error
 	ComparePassword(hashedPassword string, plainPassword string) error
+	UploadProfilePicture(userID string, file multipart.File, fileHeader *multipart.FileHeader) (string, error) // Thêm chức năng upload ảnh đại diện
+
 }
 
 type userService struct {
@@ -182,4 +185,7 @@ func (s *userService) ChangePassword(userID, oldPassword, newPassword string) er
 	// user.Password = string(hashedPassword)
 	// return s.repo.Update(*user)
 	return errors.New("can not change password")
+}
+func (s *userService) UploadProfilePicture(userID string, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+	return s.repo.UploadProfilePicture(userID, file, fileHeader)
 }

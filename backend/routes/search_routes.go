@@ -10,7 +10,8 @@ import (
 )
 
 func SetupSearchRoutes(app *fiber.App) {
-	userRepository := repositories.NewUserRepository(neo4jDB)
+	storageRepository := repositories.NewStorageRepository()
+	userRepository := repositories.NewUserRepository(neo4jDB, storageRepository)
 	postRepository := repositories.NewPostRepository(mongoDB)
 	service := services.NewSearchService(&userRepository, &postRepository)
 	controller := controllers.NewSearchController(service)

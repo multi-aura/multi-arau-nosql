@@ -3,6 +3,8 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
+	"mime/multipart"
 	"multiaura/internal/databases"
 	"multiaura/internal/models"
 	"time"
@@ -35,14 +37,19 @@ type UserRepository interface {
 	GetRelationship(targetUserID, userID string) (models.RelationshipStatus, error)
 	Search(userID, query string, page, limit int) ([]*models.OtherUser, error)
 	GetSuggestedFriends(userID string, page, limit int) ([]*models.OtherUser, error)
+	UploadProfilePicture(userID string, file multipart.File, fileHeader *multipart.FileHeader) (string, error)
 }
 
 type userRepository struct {
-	db *databases.Neo4jDB
+	db          *databases.Neo4jDB
+	storageRepo StorageRepository
 }
 
-func NewUserRepository(db *databases.Neo4jDB) UserRepository {
-	return &userRepository{db: db}
+func NewUserRepository(db *databases.Neo4jDB, storageRepo StorageRepository) UserRepository {
+	return &userRepository{
+		db:          db,
+		storageRepo: storageRepo,
+	}
 }
 
 func (repo *userRepository) GetByID(id string) (*models.User, error) {
@@ -1117,4 +1124,40 @@ func (repo *userRepository) GetBlockedList(userID string) ([]string, error) {
 	}
 
 	return blockedList, nil
+}
+func (repo *userRepository) UploadProfilePicture(userID string, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	profilePictureUrl, err := repo.storageRepo.UploadFile(file, fileHeader, "Hihon")
+	if err != nil {
+		return "", err
+	}
+
+	tx, err := session.BeginTransaction(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Close(ctx)
+
+	_, err = tx.Run(ctx,
+		"MATCH (u:User {id: $id}) SET u.user_image = $profile_picture_url RETURN u",
+		map[string]interface{}{
+			"id":                  userID,
+			"profile_picture_url": profilePictureUrl,
+		},
+	)
+	if err != nil {
+		fmt.Println("Error in updating user image in Update function:", err)
+		return "", err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		fmt.Println("Failed to commit transaction:", err)
+		return "", err
+	}
+	fmt.Println("Successfully updated profile picture in Neo4j with URL:", profilePictureUrl)
+	return profilePictureUrl, nil
 }

@@ -3,6 +3,7 @@ import SearchBar from '../components/Explore/Search/SearchExploreBar';
 import TabMenu from '../components/Explore/TabMenu/TabMenu';
 import SuggestedUsers from '../components/Explore/SuggestedUser/ListSuggestedUsers';
 import Layout from '../layouts/Layout';
+import PeopleSearchResult from '../components/Explore/ExploreSubPage/PeopleSearchResult';
 import '../assets/css/Explore.css';
 
 function Explore() {
@@ -33,7 +34,7 @@ function Explore() {
       case 'News':
         return <div><h2>Nội dung "News" sẽ hiển thị ở đây</h2></div>;
       case 'People':
-        return <div><h2>Nội dung "People" sẽ hiển thị ở đây</h2></div>;
+        return <PeopleSearchResult suggestedUsers={suggestedUsers} />;
       case 'Posts':
         return <div><h2>Nội dung "Posts" sẽ hiển thị ở đây</h2></div>;
       default:

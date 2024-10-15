@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaSearch } from 'react-icons/fa'; // Thư viện react-icons để dùng icon kính lúp
+
 import MessageItem from '../MessageItem/MessageItem';
 import './SidebarChat.css';
 
@@ -28,12 +28,6 @@ function SidebarChat({ messages = [], onSelectChat }) {
       <h5 style={{ color: "white" }}>Messages</h5>
 
 
-        {!isSearchVisible && (
-          <FaSearch 
-            className="search-icon" 
-            onClick={() => setSearchVisible(true)} 
-          />
-        )}
 
         {isSearchVisible && (
           <input 

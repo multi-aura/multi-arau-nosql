@@ -2,7 +2,6 @@ import axios from 'axios';
 import { API_URL } from '../config/config';
 import Cookies from 'js-cookie';
 
-//service: tầng này nó sẽ tương tác với UI
 const CONVERSATION_URL = `${API_URL}/conversation`;
 
 export const getUserConversation = async (userID) => {

@@ -1,15 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect  } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import './SearchExploreBar.css';
 import SearchResults from './SearchResults';
+import { searchPeople, getPeopleSuggestions} from '../../../services/searchService';
 
 const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      try {
+        const result = await getPeopleSuggestions(); 
+        console.log(result);
+        setSuggestions(result);
+      } catch (error) {
+        console.error('Lỗi khi lấy gợi ý:', error);
+      }
+    };
 
-  const recentSearches = ['Nguyễn Huy Hoàng', 'Kim Đinh', 'Minh Thư']; // Ví dụ Recent
-  const suggestions = ['Nguyễn Huy Hoàng', 'Kim Đinh', 'Minh Thư']; // Ví dụ Suggestions
+    fetchSuggestions();
+  }, []);
+
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (searchTerm) {
+        try {
+          const results = await searchPeople(searchTerm);
+          setSearchResults(results); 
+          console.log(results);
+        } catch (error) {
+          console.error('Lỗi khi tìm kiếm:', error);
+        }
+      }
+    };
+
+    fetchResults();
+  }, [searchTerm]);
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -34,7 +63,7 @@ const SearchBar = () => {
         
       
       {showResults && (
-        <SearchResults recentSearches={recentSearches} suggestions={suggestions} />
+        <SearchResults recentSearches={searchResults} suggestions={suggestions} />
       )}
     </div>
   );
