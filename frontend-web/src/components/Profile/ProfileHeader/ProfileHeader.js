@@ -15,7 +15,7 @@ function ProfileHeader({ userData, friends, followers, followings }) {
       <div className="col-md-8 profile-info">
         <h2>{userData.fullname}</h2>
         <p>2 posts • {friends.length} friends • 30 likes</p>
-        <p>{followers.length} followings •  {followings.length} followers</p>
+        <p>{followings.length} followings •  {followers.length} followers</p>
         <div className="friend-avatars d-flex">
            {friends.slice(0, 3).map(friend => (
             <img
