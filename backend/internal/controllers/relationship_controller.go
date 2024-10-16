@@ -367,32 +367,15 @@ func (uc *RelationshipController) GetProfile(c *fiber.Ctx) error {
 		})
 	}
 
-	userProfile, err := uc.service.GetProfile(username)
+	userID := c.Locals("userID").(string)
+
+	userProfile, err := uc.service.GetProfile(userID, username)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
 			Status:  fiber.StatusInternalServerError,
-			Message: "Fail to get user profile",
+			Message: err.Error(),
 			Error:   "StatusInternalServerError",
 		})
-	}
-	userID, ok := c.Locals("userID").(string)
-	if !ok || userID == "" {
-		isBlocked, err := uc.service.IsBlockedBy(userID, userProfile.ID)
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
-				Status:  fiber.StatusInternalServerError,
-				Message: "Fail to check block",
-				Error:   "StatusInternalServerError",
-			})
-		}
-
-		if isBlocked {
-			return c.Status(fiber.StatusNotAcceptable).JSON(APIResponse.ErrorResponse{
-				Status:  fiber.StatusNotAcceptable,
-				Message: "Access denied. User is blocked",
-				Error:   "StatusNotAcceptable",
-			})
-		}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
