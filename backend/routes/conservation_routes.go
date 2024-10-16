@@ -9,9 +9,8 @@ import (
 )
 
 func SetupConversationRoutes(app *fiber.App) {
-	storageRepository := repositories.NewStorageRepository()
 	repository := repositories.NewConversationRepository(mongoDB)
-	userrepository := repositories.NewUserRepository(neo4jDB, storageRepository)
+	userrepository := repositories.NewUserRepository(neo4jDB)
 
 	service := services.NewConversationService(repository, userrepository)
 	controller := controllers.NewConversationController(service)

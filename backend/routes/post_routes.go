@@ -10,8 +10,7 @@ import (
 )
 
 func SetupPostRoutes(app *fiber.App) {
-	storageRepository := repositories.NewStorageRepository()
-	userRepository := repositories.NewUserRepository(neo4jDB, storageRepository)
+	userRepository := repositories.NewUserRepository(neo4jDB)
 	postRepository := repositories.NewPostRepository(mongoDB)
 	service := services.NewPostService(&postRepository, &userRepository)
 	controller := controllers.NewPostController(service)

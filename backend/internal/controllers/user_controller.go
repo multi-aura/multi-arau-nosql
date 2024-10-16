@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"multiaura/internal/models"
 	"multiaura/internal/services"
 	APIResponse "multiaura/pkg/api_response"
@@ -233,43 +232,5 @@ func (uc *UserController) ChangePassword(c *fiber.Ctx) error {
 		Status:  fiber.StatusOK,
 		Message: "Password changed successfully",
 		Data:    nil,
-	})
-}
-func (uc *UserController) UploadProfilePicture(c *fiber.Ctx) error {
-	userID := c.Params("user_id")
-
-	fileHeader, err := c.FormFile("user_image")
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
-			Status:  fiber.StatusBadRequest,
-			Message: "Invalid file",
-			Error:   err.Error(),
-		})
-	}
-
-	file, err := fileHeader.Open()
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
-			Status:  fiber.StatusInternalServerError,
-			Message: "Unable to open file",
-			Error:   err.Error(),
-		})
-	}
-	defer file.Close()
-
-	profilePictureURL, err := uc.service.UploadProfilePicture(userID, file, fileHeader)
-	if err != nil {
-		fmt.Println("Error in UploadProfilePicture service:", err)
-		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
-			Status:  fiber.StatusInternalServerError,
-			Message: "Failed to upload profile picture",
-			Error:   err.Error(),
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
-		Status:  fiber.StatusOK,
-		Message: "Profile picture uploaded successfully",
-		Data:    fiber.Map{"profile_picture_url": profilePictureURL},
 	})
 }
