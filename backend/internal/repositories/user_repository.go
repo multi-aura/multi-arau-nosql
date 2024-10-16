@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"errors"
-	"mime/multipart"
 	"multiaura/internal/databases"
 	"multiaura/internal/models"
 	"time"
@@ -36,20 +35,18 @@ type UserRepository interface {
 	GetRelationship(targetUserID, userID string) (models.RelationshipStatus, error)
 	Search(userID, query string, page, limit int) ([]*models.OtherUser, error)
 	GetSuggestedFriends(userID string, page, limit int) ([]*models.OtherUser, error)
-	UploadProfilePicture(userID string, file multipart.File, fileHeader *multipart.FileHeader) (string, error)
+	UploadProfilePhoto(userID, url string) (bool, error)
 	GetMutualFollowings(targetUserID, userID string) ([]*models.UserSummary, error)
 	GetMutualFriends(targetUserID, userID string) ([]*models.UserSummary, error)
 }
 
 type userRepository struct {
-	db          *databases.Neo4jDB
-	storageRepo StorageRepository
+	db *databases.Neo4jDB
 }
 
-func NewUserRepository(db *databases.Neo4jDB, storageRepo StorageRepository) UserRepository {
+func NewUserRepository(db *databases.Neo4jDB) UserRepository {
 	return &userRepository{
-		db:          db,
-		storageRepo: storageRepo,
+		db: db,
 	}
 }
 
@@ -1164,38 +1161,33 @@ func (repo *userRepository) GetBlockedList(userID string) ([]string, error) {
 	return blockedList, nil
 }
 
-func (repo *userRepository) UploadProfilePicture(userID string, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+func (repo *userRepository) UploadProfilePhoto(userID, url string) (bool, error) {
 	ctx := context.Background()
 	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
 
-	profilePictureUrl, err := repo.storageRepo.UploadFile(file, fileHeader, "Hihon")
-	if err != nil {
-		return "", err
-	}
-
 	tx, err := session.BeginTransaction(ctx)
 	if err != nil {
-		return "", err
+		return false, err
 	}
 	defer tx.Close(ctx)
 
 	_, err = tx.Run(ctx,
-		"MATCH (u:User {id: $id}) SET u.user_image = $profile_picture_url RETURN u",
+		"MATCH (u:User {userID: $userID}) SET u.avatar = $url RETURN u",
 		map[string]interface{}{
-			"id":                  userID,
-			"profile_picture_url": profilePictureUrl,
+			"userID": userID,
+			"url":    url,
 		},
 	)
 	if err != nil {
-		return "", err
+		return false, err
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		return "", err
+		return false, err
 	}
-	return profilePictureUrl, nil
+	return true, nil
 }
 
 func (repo *userRepository) GetMutualFollowings(targetUserID, userID string) ([]*models.UserSummary, error) {

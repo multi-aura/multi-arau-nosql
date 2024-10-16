@@ -21,6 +21,7 @@ type PostRepository interface {
 	SearchNewsMixedPosts(query string, userIDs []string, limit, page int64) ([]*models.Post, error)
 	SearchPostsForYou(query, userID string, limit, page int64) ([]*models.Post, error)
 	Search(query string, blockedUserIDs []string, limit, page int64) ([]*models.Post, error)
+	UploadPhotos(id string, url []string) (bool, error)
 }
 
 type postRepository struct {
@@ -453,4 +454,40 @@ func (repo *postRepository) Search(query string, blockedUserIDs []string, limit 
 	}
 
 	return posts, nil
+}
+
+func (repo *postRepository) UploadPhotos(id string, urls []string) (bool, error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return false, err
+	}
+
+	var images []models.Image
+	for _, url := range urls {
+		images = append(images, models.Image{
+			URL: url,
+			ID:  primitive.NewObjectID(),
+		})
+	}
+
+	filter := bson.M{
+		"_id": objID,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"images": images,
+		},
+	}
+
+	result, err := repo.collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return false, err
+	}
+
+	if result.MatchedCount == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }

@@ -2,6 +2,9 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/url"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -131,4 +134,29 @@ func GetObjectID(data map[string]interface{}, key string) primitive.ObjectID {
 		}
 	}
 	return primitive.NilObjectID
+}
+
+func ExtractFileName(fileURL string) (string, error) {
+	// Parse URL để tách phần path
+	parsedURL, err := url.Parse(fileURL)
+	if err != nil {
+		return "", fmt.Errorf("invalid URL: %v", err)
+	}
+
+	// Lấy path từ URL và giải mã
+	filePath := parsedURL.Path
+	decodedFilePath, err := url.PathUnescape(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode file path: %v", err)
+	}
+
+	// Tách file name từ đường dẫn
+	parts := strings.Split(decodedFilePath, "/")
+	if len(parts) < 2 {
+		return "", fmt.Errorf("invalid file path format")
+	}
+
+	// Trả về tên file (phần cuối cùng)
+	fileName := parts[len(parts)-1]
+	return fileName, nil
 }

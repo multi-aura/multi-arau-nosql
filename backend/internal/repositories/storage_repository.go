@@ -14,6 +14,7 @@ import (
 
 type StorageRepository interface {
 	UploadFile(file multipart.File, fileHeader *multipart.FileHeader, folder string) (string, error)
+	DeleteFile(fileName string) error
 }
 
 type storageRepository struct {
@@ -59,6 +60,31 @@ func (repo *storageRepository) UploadFile(file multipart.File, fileHeader *multi
 
 	return fileUrl, nil
 }
+
+func (repo *storageRepository) DeleteFile(fileName string) error {
+	ctx := context.Background()
+
+	// Khởi tạo Firebase Storage client
+	client, err := configs.InitializeFirebaseApp().Storage(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to initialize Firebase storage client: %w", err)
+	}
+
+	// Lấy bucket từ Firebase
+	bucket, err := client.Bucket(repo.bucketName)
+	if err != nil {
+		return fmt.Errorf("failed to get Firebase storage bucket: %w", err)
+	}
+
+	// Xóa object từ Firebase Storage
+	object := bucket.Object(fileName)
+	if err := object.Delete(ctx); err != nil {
+		return fmt.Errorf("failed to delete file %s: %w", fileName, err)
+	}
+
+	return nil
+}
+
 
 func generateUUID() string {
 	return uuid.New().String()
