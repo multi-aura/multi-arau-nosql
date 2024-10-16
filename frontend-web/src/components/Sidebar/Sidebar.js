@@ -62,7 +62,7 @@ function Sidebar() {
         <li className="nav-item">
           <a
             className={`tab-link ${activeTab === '/notifications' ? 'active' : ''}`}
-            href="/notifications"
+            href="#notifications"
             onClick={() => handleTabClick('/notifications')}
           >
             <FontAwesomeIcon icon={faBell} className="icon" />

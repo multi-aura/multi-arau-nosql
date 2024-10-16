@@ -7,10 +7,15 @@ import Introduce from '../components/Profile/SubProfile/Introduce';
 import Friends from '../components/Profile/SubProfile/Friends';
 import Layout from '../layouts/Layout';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { getFriends,getFollowers,getFollowings } from '../services/RelationshipService'
+
 import Cookies from 'js-cookie';
 
 function MyProfile() {
   const [userData, setUserData] = useState(null);
+  const [friends, setFriends] = useState([]);
+  const [followers, setFollowers] = useState([]);
+  const [followings, setFollowings] = useState([]);
   const [activeTab, setActiveTab] = useState('posts');
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,6 +33,20 @@ function MyProfile() {
         setUserData(JSON.parse(storedUser));
       }
     }
+    const fetchRelationships = async () => {
+      try {
+        const friendsData = await getFriends();
+        const followersData = await getFollowers();
+        const followingsData = await getFollowings();
+        setFriends(friendsData || []);
+        setFollowers(followersData || []);
+        setFollowings(followingsData || []);
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách bạn bè:', error);
+      }
+    };
+
+    fetchRelationships();
     const storedTab = localStorage.getItem('activeTab');
     if (storedTab) {
       setActiveTab(storedTab);
@@ -59,7 +78,12 @@ function MyProfile() {
   return (
     <Layout userData={userData}>
       <div className="container myprofile-page text-white py-5">
-        <ProfileHeader userData={userData} />
+        <ProfileHeader 
+          userData={userData} 
+          friends={friends.length ? friends : []} 
+          followers={followers.length ? followers : []} 
+          followings={followings.length ? followings : []} 
+        />
         <ProfileNav activeTab={activeTab} onTabChange={handleTabChange} />
         <div className="row mt-4">
           <div className="col-md-12">
