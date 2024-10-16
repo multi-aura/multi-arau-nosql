@@ -41,4 +41,28 @@
     color: #000000;
   }
   
+  .friend-avatars {
+    display: flex;
+    position: relative;
+    padding-left: 0;
+  }
+  
+  .friend-avatars img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-left: -15px;
+    z-index: 1;
+    position: relative;
+  }
+  
+  .friend-avatars img:first-child {
+    margin-left: 0;
+  }
+  
+  .friend-avatars span {
+    color: white;
+    font-size: 14px;
+    margin-left: 10px; 
+  }
   

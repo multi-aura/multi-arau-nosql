@@ -52,6 +52,7 @@ export const getFollowings = async () => {
       throw error;
     }
 };
+
 export const unfollowUser = async (userID) => {
   try {
       const token = Cookies.get('authToken');
@@ -86,5 +87,21 @@ export const followUser = async (userID) => {
   } catch (error) {
       console.error('Fail to follow this user:', error.response ? error.response.data : error.message);
       throw error;
+  }
+};
+export const checkRelationshipStatus = async (userID) => {
+  try {
+    const token = Cookies.get('authToken');
+
+    const response = await axios.post(`${RELATIONSHIPS_URL}/status/${userID}`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`, 
+      },
+    });
+    
+    return response.data.data; 
+  } catch (error) {
+    console.error('Fail to check Relationship:', error);
+    throw error;
   }
 };

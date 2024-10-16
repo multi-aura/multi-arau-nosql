@@ -2,7 +2,7 @@ import React from 'react';
 import './ProfileHeader.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog } from '@fortawesome/free-solid-svg-icons';
-function ProfileHeader({ userData }) {
+function ProfileHeader({ userData, friends, followers, followings }) {
     if (!userData || !userData.avatar) {
         console.log(userData);
         return <p>Loading profile...</p>;  
@@ -14,9 +14,21 @@ function ProfileHeader({ userData }) {
       </div>
       <div className="col-md-8 profile-info">
         <h2>{userData.fullname}</h2>
-        <p>50 posts • 1.1k friends • 20k likes</p>
-        {/* <p>{userData.posts.length} posts • {userData.friends} friends • {userData.likes} likes</p> */}
-        <button className="btn btn-outline-light d-flex align-items-center">
+        <p>2 posts • {friends.length} friends • 30 likes</p>
+        <p>{followers.length} followings •  {followings.length} followers</p>
+        <div className="friend-avatars d-flex">
+           {friends.slice(0, 3).map(friend => (
+            <img
+              key={friend.userID}
+              src={friend.avatar}
+              alt={friend.fullname}
+              className="small-avatar rounded-circle me-2"
+              style={{ width: '40px', height: '40px' }}
+            />
+          ))}
+          {friends.length > 3 && <span>+{friends.length - 3} more</span>}
+        </div>
+        <button className="btn btn-outline-black d-flex align-items-center">
           <FontAwesomeIcon icon={faCog} className="me-2" />
           Edit Profile
         </button>
