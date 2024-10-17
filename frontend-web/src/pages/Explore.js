@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import SearchBar from '../components/Explore/Search/SearchExploreBar';
 import TabMenu from '../components/Explore/TabMenu/TabMenu';
 import SuggestedUsers from '../components/Explore/SuggestedUser/ListSuggestedUsers';
+import ForYou from '../components/Explore/ExploreSubPage/ForYou';
+import Trending from '../components/Explore/ExploreSubPage/Trending';
+import News from '../components/Explore/ExploreSubPage/News';
+import Posts from '../components/Explore/ExploreSubPage/Posts';
+
 import Layout from '../layouts/Layout';
 import PeopleSearchResult from '../components/Explore/ExploreSubPage/PeopleSearchResult';
 import {getPeopleSuggestions } from '../services/searchService';
@@ -36,15 +41,15 @@ function Explore() {
   const renderContent = () => {
     switch (activeTab) {
       case 'For you':
-        return <div><h2>Nội dung "For You" sẽ hiển thị ở đây</h2></div>;
+        return  <ForYou />;
       case 'Trending':
-        return <div><h2>Nội dung "Trending" sẽ hiển thị ở đây</h2></div>;
+        return <Trending />;
       case 'News':
-        return <div><h2>Nội dung "News" sẽ hiển thị ở đây</h2></div>;
+        return <News />
       case 'People':
         return <PeopleSearchResult suggestedUsers={suggestedUsers} />;
       case 'Posts':
-        return <div><h2>Nội dung "Posts" sẽ hiển thị ở đây</h2></div>;
+        return <Posts />
       default:
         return <div><h2>Nội dung mặc định sẽ hiển thị ở đây</h2></div>;
     }

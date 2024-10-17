@@ -50,3 +50,94 @@ export const getPeopleSuggestions = async (limit = 6, page = 1)  => {
         throw error;
     }
 };
+
+export const getForYouPosts = async (limit = 10, page = 1) => {
+    try {
+      const token = Cookies.get('authToken'); 
+  
+      const response = await axios.post(`${SEARCH_URL}/for-you`, 
+        {
+          limit, 
+          page
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}` 
+          }
+        }
+      );
+      
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy bài viết "For You":', error);
+      throw error;
+    }
+  };
+
+  export const getNewsPosts = async (limit = 10, page = 1) => {
+    try {
+      const token = Cookies.get('authToken'); 
+  
+      const response = await axios.post(`${SEARCH_URL}/news`, 
+        {
+          limit, 
+          page
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}` 
+          }
+        }
+      );
+      
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy bài viết "News":', error);
+      throw error;
+    }
+  };
+  export const getTrendingPosts = async (limit = 10, page = 1) => {
+    try {
+      const token = Cookies.get('authToken'); 
+  
+      const response = await axios.post(`${SEARCH_URL}/trending`, 
+        {
+          limit, 
+          page
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}` 
+          }
+        }
+      );
+      
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy bài viết "Trending":', error);
+      throw error;
+    }
+  };
+
+  export const getPosts = async (limit = 10, page = 1) => {
+    try {
+      const token = Cookies.get('authToken'); 
+  
+      const response = await axios.post(`${SEARCH_URL}/posts`, 
+        {
+          limit, 
+          page
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}` 
+          }
+        }
+      );
+      
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy bài viết "Post":', error);
+      throw error;
+    }
+  };
