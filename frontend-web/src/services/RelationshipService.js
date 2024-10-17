@@ -105,3 +105,18 @@ export const checkRelationshipStatus = async (userID) => {
     throw error;
   }
 };
+export const blockUser = async (userID) => {
+  const token = Cookies.get('authToken');
+  const response = await axios.post(`${RELATIONSHIPS_URL}/block/${userID}`, {}, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const unblockUser = async (userID) => {
+  const token = Cookies.get('authToken');
+  const response = await axios.post(`${RELATIONSHIPS_URL}/unblock/${userID}`, {}, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};

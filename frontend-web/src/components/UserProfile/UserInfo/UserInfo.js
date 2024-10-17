@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import './UserInfo.css';
-import { followUser, unfollowUser, checkRelationshipStatus } from '../../../services/RelationshipService';
+import { followUser, unfollowUser, checkRelationshipStatus, blockUser } from '../../../services/RelationshipService';
 
 const UserInfo = ({ user }) => {
   const [relationshipStatus, setRelationshipStatus] = useState('');
   const [loading, setLoading] = useState(true);
-
+  const [isBlocked, setIsBlocked] = useState(false);
   useEffect(() => {
     const fetchRelationshipStatus = async () => {
       try {
         const status = await checkRelationshipStatus(user.userID);
         setRelationshipStatus(status.status);
+        setIsBlocked(status.isBlocked || false);
         console.log(status);
       } catch (error) {
         console.error('Lỗi khi kiểm tra trạng thái quan hệ:', error);
@@ -39,18 +40,25 @@ const UserInfo = ({ user }) => {
       console.error('Lỗi khi hủy theo dõi:', error);
     }
   };
-
+  const handleBlockClick = async () => {
+    try {
+      await blockUser(user.userID); 
+      setIsBlocked(true); 
+    } catch (error) {
+      console.error('Lỗi khi block người dùng:', error);
+    }
+  };
   if (loading) {
     return <p>Loading...</p>;
   }
 
   const renderActionButton = () => {
     switch (relationshipStatus) {
-      case 'isFriend':
+      case 'Friend':
         return <button className="btn btn-success" disabled>Friend</button>;
-      case 'isFollower':
-        return <button className="btn btn-info" onClick={handleFollowClick}>Follow Back</button>;
-      case 'isFollowedBy':
+      case 'Following':
+        return <button className="btn btn-info" onClick={handleFollowClick}>FollowBack</button>;
+      case 'Followed':
         return <button className="btn btn-danger" onClick={handleUnfollowClick}>Unfollow</button>; 
       default:
         return <button className="btn btn-secondary" onClick={handleFollowClick}>Follow</button>;
@@ -66,6 +74,9 @@ const UserInfo = ({ user }) => {
       <p>{user.bio}</p>
       {renderActionButton()}  
       <button className="btn btn-secondary">Message</button>
+      <button className="btn btn-danger" onClick={handleBlockClick} disabled={isBlocked}>
+        {isBlocked ? 'Blocked' : 'Block'}
+      </button>
     </div>
   );
 };

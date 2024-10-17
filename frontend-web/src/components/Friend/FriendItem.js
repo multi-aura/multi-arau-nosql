@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; 
 import { faUserFriends, faUserMinus } from '@fortawesome/free-solid-svg-icons';
 import { unfollowUser } from '../../services/RelationshipService';
+import { useNavigate } from 'react-router-dom'; 
 import './FriendItem.css';
 
 const FriendItem = ({ friend }) => {
   const [isFriend, setIsFriend] = useState(true); 
   const [showModal, setShowModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleToggleModal = () => {
     setShowModal(!showModal); 
@@ -26,12 +28,14 @@ const FriendItem = ({ friend }) => {
       setShowModal(false); 
     }
   };
-
+  const handleNavigateToProfile = () => {
+    navigate(`/profile/${friend.username}`);
+  };
   return (
     <>
       {isFriend ? ( 
         <li className="list-group-item friend-item d-flex justify-content-between align-items-center py-3">
-          <div className="d-flex align-items-center">
+          <div className="d-flex align-items-center" onClick={handleNavigateToProfile} style={{cursor: 'pointer'}}>
             <img
               src={friend.avatar || 'https://via.placeholder.com/50'}
               alt={friend.fullname}
