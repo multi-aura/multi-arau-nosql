@@ -1,6 +1,7 @@
 package group
 
 import (
+	"log"
 	"multiaura/internal/websocket/client"
 	"sync"
 )
@@ -29,6 +30,7 @@ func (g *Group) Run() {
 		case client := <-g.Register:
 			g.mutex.Lock()
 			g.Clients[client] = true
+			log.Printf("Client %s joined", client.UserID)
 			g.mutex.Unlock()
 
 		case client := <-g.Unregister:
@@ -36,6 +38,7 @@ func (g *Group) Run() {
 			if _, ok := g.Clients[client]; ok {
 				delete(g.Clients, client)
 				close(client.Send)
+				log.Printf("Client %s left", client.UserID)
 			}
 			g.mutex.Unlock()
 
@@ -47,6 +50,7 @@ func (g *Group) Run() {
 				default:
 					close(client.Send)
 					delete(g.Clients, client)
+					log.Printf("Failed to send message to client: %s", client.UserID)
 				}
 			}
 			g.mutex.Unlock()
@@ -68,3 +72,4 @@ func (g *Group) RemoveClient(client *client.Client) {
 func (g *Group) BroadcastMessage(message []byte) {
 	g.Broadcast <- message
 }
+	

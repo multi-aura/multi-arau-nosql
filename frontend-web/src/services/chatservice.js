@@ -10,7 +10,7 @@ export const getUserConversation = async (userID) => {
         const token = Cookies.get('authToken');
         const response = await axios.get(`${CONVERSATION_URL}/get-user-conversations/${userID}`, {
             headers: {
-                Authorization: `Bearer ${token}` 
+                Authorization: `Bearer ${token}`
             }
         });
         return response.data.data;
@@ -20,3 +20,42 @@ export const getUserConversation = async (userID) => {
         throw error;
     }
 }
+
+export const getConversationDetails = async (conversationID) => {
+    try {
+        const token = Cookies.get('authToken');
+        const response = await axios.get(`${CONVERSATION_URL}/${conversationID}`, {
+
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response.data.data;
+    } catch (error) {
+        console.log(`Failed to get conversation details for conversation with ID ${conversationID}`, error);
+        throw error;
+    }
+};
+export const sendMessageToConversation = async (conversationID, userID, content) => {
+    console.log('conversationID:', conversationID);
+    console.log('userID:', userID);
+    console.log('content:', content);
+
+    try {
+        const token = Cookies.get('authToken');
+        const response = await axios.post(`${CONVERSATION_URL}/send-message/${conversationID}`, {
+            user_id: userID,
+            content: content
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+   
+        console.log('response:', response);
+        return response.data.data;
+    } catch (error) {
+        console.log(`Failed to send message for conversation with ID ${conversationID}`, error);
+        throw error;
+    }
+};

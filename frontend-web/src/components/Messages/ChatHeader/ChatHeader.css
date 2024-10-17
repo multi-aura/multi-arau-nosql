@@ -1,26 +1,74 @@
 .chat-header {
-  border-bottom: 1px solid #333;
-  padding-bottom: 10px;
-  padding-top: 3px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #000;
+  /* Màu nền đen */
+  border-radius: 15px;
+  /* Bo góc mềm mại */
+  color: #fff;
+  /* Màu chữ trắng */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* Hiệu ứng bóng đổ */
+  margin: 10px 0;
+  /* Khoảng cách phía trên và dưới */
+  transition: background-color 0.3s ease;
+  /* Hiệu ứng khi hover */
+}
+
+.left-section {
   display: flex;
   align-items: center;
 }
-.headerchat-info{
-  margin-top: 15px;
-}
+
 .avatar {
   width: 50px;
+  /* Kích thước avatar */
   height: 50px;
   border-radius: 50%;
+  /* Làm tròn avatar */
+  margin-right: 15px;
+  /* Khoảng cách giữa avatar và tên người dùng */
 }
 
-.chat-name {
+.user-info h3 {
+  margin: 0;
   font-size: 18px;
   font-weight: bold;
-  color: white;
+  color: #ffffff;
+  /* Màu trắng cho tên người dùng */
 }
 
-.chat-status {
-  font-size: 12px;
+.user-info .status {
+  font-size: 13px;
+  /* Giảm kích thước dòng trạng thái */
   color: #888;
+  /* Màu xám nhạt cho trạng thái */
+  margin-top: 2px;
+}
+
+
+
+.chat-header:hover {
+  background-color: #111;
+  /* Màu nền đậm hơn khi hover */
+  transition: background-color 0.3s ease;
+  /* Hiệu ứng chuyển màu mượt mà */
+}
+
+.menu-icon {
+  font-size: 30px;
+  cursor: pointer;
+  color: white;
+  /* Màu tím cho icon */
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  transition: color 0.3s ease;
+  /* Thêm transition cho hiệu ứng mượt mà */
+}
+
+.menu-icon:hover {
+  color: #f51a1a;
 }

@@ -176,7 +176,7 @@ func (cc *ConversationController) SendMessage(c *fiber.Ctx) error {
 		UserID  string             `json:"user_id"`
 		Content models.ChatContent `json:"content"`
 	}
-
+	// Phân tích và parse dữ liệu JSON
 	if err := c.BodyParser(&messageData); err != nil {
 
 		return c.Status(fiber.StatusOK).JSON(APIResponse.ErrorResponse{

@@ -4,35 +4,32 @@ import (
 	"log"
 	"multiaura/internal/websocket/client"
 	"multiaura/internal/websocket/group"
-	"net/http"
 
-	"github.com/gorilla/websocket"
+	"github.com/gofiber/websocket/v2"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
+// ServeWs xử lý kết nối WebSocket
+func ServeWs(c *websocket.Conn, chatGroup *group.Group) {
+	defer c.Close()
 
-func ServeWs(w http.ResponseWriter, r *http.Request, group *group.Group) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println("Failed to upgrade to WebSocket:", err)
+	// Lấy userID từ query string (hoặc từ token, tùy thuộc vào cách bạn triển khai)
+	userID := c.Query("userID")
+	if userID == "" {
+		log.Println("UserID is missing")
 		return
 	}
 
-	userID := r.URL.Query().Get("userID")
-	chatClient := client.NewClient(conn, userID)
+	// Tạo client mới với userID
+	chatClient := client.NewClient(c, userID)
 
-	group.Register <- chatClient // Đăng ký client vào group
+	// Đăng ký client vào group
+	chatGroup.AddClient(chatClient)
+	log.Printf("User %s connected successfully via WebSocket", userID)
 
-	// Đọc và xử lý tin nhắn
+	// Đọc và xử lý tin nhắn từ client
 	go chatClient.ReadPump(func(message []byte) {
-		group.BroadcastMessage(message)
-	}, group.Unregister)
+		chatGroup.BroadcastMessage(message)
+	}, chatGroup.Unregister)
 
 	// Gửi tin nhắn tới client
 	go chatClient.WritePump()

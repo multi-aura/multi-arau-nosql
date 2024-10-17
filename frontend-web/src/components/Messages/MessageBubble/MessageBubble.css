@@ -18,7 +18,6 @@
 }
 
 .received {
-  background-color: #3e3e3e;
   float: left; /* Đưa tin nhắn của người khác sang bên trái */
   border-radius: 20px 20px 20px 0;
   text-align: left;
@@ -34,6 +33,7 @@
   margin-top: 5px;
   display: block;
   white-space: nowrap; /* Đảm bảo thời gian nằm trên một dòng */
+  float: right;
 }
 
 .avatar {
