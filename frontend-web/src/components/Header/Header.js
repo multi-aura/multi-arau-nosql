@@ -23,7 +23,7 @@ function Header({ userData }) {
           <div className="d-flex align-items-center position-relative">
             <span className="text-white me-3">{userData.fullname}</span>
             <img
-              src={userData.avatar}
+              src={userData.avatar || 'https://firebasestorage.googleapis.com/v0/b/multi-aura.appspot.com/o/Hihon%2F393107bb-4c20-44d9-9022-9c900b6b3b71.jpg?alt=media&token=5e41e599-4b72-432b-beb9-6363b2e7b0ce'}
               alt="User Avatar"
               className="rounded-circle avatar"
               onClick={toggleDropdown}
