@@ -48,7 +48,7 @@ function Post({ post }) {
   return (
     <div className="post p-3 mb-4 rounded shadow-sm text-white">
       <div className="d-flex align-items-center mb-2">
-        <img src={post.avatar} alt="Avatar" className="avatar rounded-circle" />
+        <img src={post.avatar || 'https://firebasestorage.googleapis.com/v0/b/multi-aura.appspot.com/o/Hihon%2F393107bb-4c20-44d9-9022-9c900b6b3b71.jpg?alt=media&token=5e41e599-4b72-432b-beb9-6363b2e7b0ce'} alt="Avatar" className="avatar rounded-circle" />
         <div className="ml-3">
           <h5 className="text-fullname">{post.createdBy.fullname}</h5>
           <p className="text-time">{new Date(post.createdAt).toLocaleString()}</p> 
