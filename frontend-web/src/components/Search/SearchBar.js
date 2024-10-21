@@ -5,7 +5,7 @@ import './SearchBar.css';
 
 const SearchBar = ({ searchTerm, onSearch }) => {
   return (
-    <div className="d-flex justify-content-between align-items-center mb-4 search-bar">
+    <div className="d-flex justify-content-between align-items-center mb-4 search-bars">
       <div className="input-group search-input-container">
         <div className="input-group-text search-icon-bg border-end-0" style={{ backgroundColor: '#333333',border:1}}>
             <FontAwesomeIcon icon={faSearch} className="text" style={{color:'white'}} />

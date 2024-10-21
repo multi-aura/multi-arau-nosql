@@ -1,50 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import ChatHeader from '../ChatHeader/ChatHeader';
 import MessageBubble from '../MessageBubble/MessageBubble';
 import ChatInput from '../ChatInput/ChatInput';
 import './ChatContent.css';
 
-const ChatContent = ({ chat, onSendMessage }) => {
-  const [messages, setMessages] = useState([]);
-
-  // Sắp xếp và cập nhật tin nhắn mỗi khi `chat` thay đổi
-  useEffect(() => {
-    if (chat.chats && Array.isArray(chat.chats)) {
-      const sortedMessages = [...chat.chats].sort((a, b) => new Date(a.createdat) - new Date(b.createdat));
-      setMessages(sortedMessages);
-    }
-  }, [chat]);
-
+const ChatContent = ({ chat, messages, onSendMessage, currentUserID }) => {
   const handleSendMessage = async (messageContent) => {
     try {
-      // Gửi tin nhắn qua API và đợi phản hồi từ API (sau khi tin nhắn đã lưu vào DB)
       const newMessage = await onSendMessage(messageContent);
-
-      // Chỉ khi API trả về thành công, bạn mới cập nhật giao diện
       if (newMessage) {
-        setMessages(prevMessages => [...prevMessages, newMessage]); // Cập nhật danh sách tin nhắn với tin nhắn mới
+        // Sau khi gửi tin nhắn thành công, parent component sẽ tự cập nhật `messages`
       }
     } catch (error) {
-      // Nếu xảy ra lỗi, hiển thị thông báo lỗi hoặc log ra console
-      console.error('Lỗi khi gửi tin nhắn:', error);
+      console.error('Error sending message:', error);
       alert('Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại.');
     }
   };
 
-
   return (
     <div className="chat-content">
       <ChatHeader user={chat} />
-
       <div className="chat-messages">
         {messages.length > 0 ? (
-          messages.map((message, index) => (
-            <MessageBubble
-              key={index}
-              message={message}
-              userAvatar={message.sender?.avatar || 'default-avatar.png'}   // Đặt ảnh mặc định nếu sender không tồn tại
-            />
-          ))
+          messages.map((message, index) => {
+            // Kiểm tra tin nhắn trước và tin nhắn tiếp theo
+            const previousMessage = messages[index - 1];
+            const nextMessage = messages[index + 1];
+            const isSameSenderAsPrevious = previousMessage && previousMessage.sender.userID === message.sender.userID;
+            const isLastMessageFromSameSender = !nextMessage || nextMessage.sender.userID !== message.sender.userID;
+
+            // Hiển thị tên người gửi nếu là tin nhắn đầu tiên trong chuỗi của họ
+            const showSenderInfo = !isSameSenderAsPrevious;
+
+            return (
+              <MessageBubble
+                key={index}
+                message={message}
+                userAvatar={message.sender?.avatar || 'default-avatar.png'}
+                currentUserID={currentUserID}
+                showSenderInfo={showSenderInfo} // Hiển thị tên người gửi khi cần
+                showTime={isLastMessageFromSameSender} // Hiển thị thời gian cho tin nhắn cuối cùng trong chuỗi
+              />
+            );
+          })
         ) : (
           <div className="no-message-container">
             <p className="no-message-text">
@@ -53,8 +51,6 @@ const ChatContent = ({ chat, onSendMessage }) => {
           </div>
         )}
       </div>
-
-      {/* Phần nhập tin nhắn */}
       <ChatInput onSendMessage={handleSendMessage} />
     </div>
   );

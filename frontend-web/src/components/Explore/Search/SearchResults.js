@@ -1,16 +1,27 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './SearchResults.css';
 
 const SearchResults = ({ recentSearches, suggestions }) => {
+  const navigate = useNavigate();
+
+  const handleProfileClick = (username) => {
+    navigate(`/profile/${username}`);
+  };
+
   return (
     <div className="search-results-container">
-      {/* Recent Section */}
       <div className="recent-searches">
         <h5>Recent</h5>
         <ul>
-          {recentSearches.map((item, index) => (
-            <li key={index} className="d-flex justify-content-between align-items-center">
-              <span className="search-item">{item}</span>
+          {Array.isArray(recentSearches) && recentSearches.map((item, index) => (
+            <li 
+              key={index} 
+              className="d-flex justify-content-between align-items-center"
+              onClick={() => handleProfileClick(item.username)} 
+              style={{ cursor: 'pointer' }} 
+            >
+              <span className="search-item">{item.fullname} ({item.username})</span>
               <button className="btn-remove">X</button>
             </li>
           ))}
@@ -20,13 +31,17 @@ const SearchResults = ({ recentSearches, suggestions }) => {
 
       <hr />
 
-      {/* Suggestions Section */}
       <div className="suggestions-for-you">
         <h5>Suggestions for you</h5>
         <ul>
-          {suggestions.map((item, index) => (
-            <li key={index} className="d-flex justify-content-between align-items-center">
-              <span className="search-item">{item}</span>
+          {Array.isArray(suggestions) && suggestions.map((item, index) => (
+            <li 
+              key={index} 
+              className="d-flex justify-content-between align-items-center"
+              onClick={() => handleProfileClick(item.username)} 
+              style={{ cursor: 'pointer' }} 
+            >
+              <span className="search-item">{item.fullname} ({item.username})</span>
               <button className="btn-remove">X</button>
             </li>
           ))}

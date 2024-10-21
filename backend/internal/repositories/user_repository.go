@@ -31,7 +31,13 @@ type UserRepository interface {
 	GetFriends(userID string) ([]*models.User, error)
 	GetFollowers(userID string) ([]*models.UserSummary, error)
 	GetFollowings(userID string) ([]*models.UserSummary, error)
+	GetBlockedList(userID string) ([]string, error)
 	GetRelationship(targetUserID, userID string) (models.RelationshipStatus, error)
+	Search(userID, query string, page, limit int) ([]*models.OtherUser, error)
+	GetSuggestedFriends(userID string, page, limit int) ([]*models.OtherUser, error)
+	UploadProfilePhoto(userID, url string) (bool, error)
+	GetMutualFollowings(targetUserID, userID string) ([]*models.UserSummary, error)
+	GetMutualFriends(targetUserID, userID string) ([]*models.UserSummary, error)
 }
 
 type userRepository struct {
@@ -39,7 +45,9 @@ type userRepository struct {
 }
 
 func NewUserRepository(db *databases.Neo4jDB) UserRepository {
-	return &userRepository{db: db}
+	return &userRepository{
+		db: db,
+	}
 }
 
 func (repo *userRepository) GetByID(id string) (*models.User, error) {
@@ -748,8 +756,7 @@ func (repo *userRepository) GetFollowers(userID string) ([]*models.UserSummary, 
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		records, err := tx.Run(ctx, `
-			MATCH (u:User)-[:FOLLOWS|FRIEND_WITH]->(f:User)
-			WHERE u.userID = $userID
+			MATCH (u:User{userID: $userID})<-[:FOLLOWS|FRIEND_WITH]-(f:User)
 			RETURN f.userID AS userID, f.fullname AS fullname, f.username AS username, f.avatar AS avatar
 		`, map[string]interface{}{
 			"userID": userID,
@@ -809,7 +816,7 @@ func (repo *userRepository) GetFollowings(userID string) ([]*models.UserSummary,
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		records, err := tx.Run(ctx, `
-			MATCH (u:User)<-[:FOLLOWS|FRIEND_WITH]-(f:User)
+			MATCH (u:User{userID: $userID})-[:FOLLOWS|FRIEND_WITH]->(f:User)
 			WHERE u.userID = $userID
 			RETURN f.userID AS userID, f.fullname AS fullname, f.username AS username, f.avatar AS avatar
 		`, map[string]interface{}{
@@ -913,15 +920,15 @@ func (repo *userRepository) GetRelationship(targetUserID, userID string) (models
 
 			switch relationshipStatus.(string) {
 			case "BLOCKING":
-				status = models.IsBlocking
+				status = models.Blocking
 			case "BLOCKED_BY":
-				status = models.IsBlockedBy
+				status = models.Blocked
 			case "FRIEND":
-				status = models.IsFriend
+				status = models.Friend
 			case "FOLLOWING":
-				status = models.IsFollowing
+				status = models.Following
 			case "FOLLOWED_BY":
-				status = models.IsFollowedBy
+				status = models.Follower
 			default:
 				status = models.NoRelationship
 			}
@@ -947,4 +954,354 @@ func (repo *userRepository) GetRelationship(targetUserID, userID string) (models
 	}
 
 	return result.(models.RelationshipStatus), nil
+}
+
+func (repo *userRepository) Search(userID, query string, page, limit int) ([]*models.OtherUser, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		// Calculate the number of records to skip based on the page and limit
+		skip := (page - 1) * limit
+
+		searchQuery := `
+			MATCH (u:User)
+			WHERE (u.fullname CONTAINS $query OR u.username CONTAINS $query)
+				AND u.userID <> $currentUserID
+				AND NOT EXISTS {
+					MATCH (u)-[:BLOCKED]-(b:User {userID: $currentUserID})
+				}
+			OPTIONAL MATCH (u1:User {userID: $currentUserID})
+			OPTIONAL MATCH (u1)-[r1:FOLLOWS]->(u)
+			OPTIONAL MATCH (u)-[r2:FOLLOWS]->(u1)
+			OPTIONAL MATCH (u1)-[r3:FRIEND_WITH]-(u)
+			OPTIONAL MATCH (u)-[r4:FRIEND_WITH]-(u1)
+			RETURN u,
+			CASE 
+				WHEN COUNT(r3) > 0 THEN 'FRIEND'
+				WHEN COUNT(r4) > 0 THEN 'FRIEND'
+				WHEN COUNT(r1) > 0 THEN 'FOLLOWING'
+				WHEN COUNT(r2) > 0 THEN 'FOLLOWED_BY'
+				ELSE 'NO_RELATIONSHIP'
+			END AS relationshipStatus,
+			COALESCE(
+				MAX(CASE WHEN r3 IS NOT NULL THEN r3.since END), 
+				MAX(CASE WHEN r4 IS NOT NULL THEN r4.since END), 
+				MAX(CASE WHEN r1 IS NOT NULL THEN r1.since END), 
+				MAX(CASE WHEN r2 IS NOT NULL THEN r2.since END)
+			) AS since
+			SKIP $skip
+			LIMIT $limit
+		`
+
+		// Execute the query with pagination parameters
+		records, err := tx.Run(ctx, searchQuery, map[string]interface{}{
+			"query":         query,
+			"currentUserID": userID,
+			"skip":          skip,
+			"limit":         limit,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		var otherUsers []*models.OtherUser
+
+		// Loop through the result set
+		for records.Next(ctx) {
+			record := records.Record()
+
+			// Create a map to combine all data
+			userData := make(map[string]interface{})
+
+			// Get the user node
+			otherUserNode, _ := record.Get("u")
+			otherUserNodeProps := otherUserNode.(neo4j.Node).Props
+
+			// Get the relationship status and since timestamp
+			relationshipStatus, _ := record.Get("relationshipStatus")
+			since, _ := record.Get("since")
+
+			// Add user properties to the map
+			for key, value := range otherUserNodeProps {
+				userData[key] = value
+			}
+
+			// Add relationship status and since to the map
+			userData["relationshipStatus"] = relationshipStatus
+			userData["since"] = since
+
+			// Convert the map to OtherUser model
+			otherUser := &models.OtherUser{}
+			otherUser, err = otherUser.FromMap(userData)
+			if err != nil {
+				return nil, errors.New("error converting map to User")
+			}
+
+			otherUsers = append(otherUsers, otherUser)
+		}
+
+		return otherUsers, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	users := result.([]*models.OtherUser)
+	return users, nil
+}
+
+func (repo *userRepository) GetSuggestedFriends(userID string, page, limit int) ([]*models.OtherUser, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeRead,
+	})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		query := `
+			MATCH (me:User {userID: $userID})
+			OPTIONAL MATCH (me)-[:FOLLOWS|FRIEND_WITH]-(friend:User)
+			WITH me, COUNT(friend) AS friendCount
+			MATCH (fof:User)
+			WHERE fof.userID <> me.userID
+				AND NOT (me)-[:BLOCKED]-(fof)
+				AND NOT (me)-[:FOLLOWS|FRIEND_WITH]->(fof)
+			RETURN fof, friendCount
+			ORDER BY
+				friendCount DESC,
+				CASE WHEN fof.province = me.province THEN 0 ELSE 1 END,
+				CASE WHEN fof.nation = me.nation THEN 0 ELSE 1 END
+			SKIP $skip
+            LIMIT $limit
+        `
+		skip := (page - 1) * limit
+
+		records, err := tx.Run(ctx, query, map[string]interface{}{
+			"userID": userID,
+			"skip":   skip,
+			"limit":  limit,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var suggestedUsers []*models.OtherUser
+
+		for records.Next(ctx) {
+			record := records.Record()
+			otherUserNode, _ := record.Get("fof")
+			otherUser := &models.OtherUser{}
+			otherUserNodeProps := otherUserNode.(neo4j.Node).Props
+
+			otherUser, err = otherUser.FromMap(otherUserNodeProps)
+			if err != nil {
+				return nil, errors.New("error converting map to UserSummary")
+			}
+
+			suggestedUsers = append(suggestedUsers, otherUser)
+		}
+
+		return suggestedUsers, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	users := result.([]*models.OtherUser)
+	return users, nil
+}
+
+func (repo *userRepository) GetBlockedList(userID string) ([]string, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeRead,
+	})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		records, err := tx.Run(ctx, `
+			MATCH (u:User{userID: $userID})-[r:BLOCKED]-(blocked:User)
+			RETURN blocked.userID AS userID
+		`, map[string]interface{}{
+			"userID": userID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var blockeds []string
+		for records.Next(ctx) {
+			record := records.Record()
+
+			if userIDVal, ok := record.Get("userID"); ok {
+				blockeds = append(blockeds, userIDVal.(string))
+			}
+		}
+
+		if err = records.Err(); err != nil {
+			return nil, err
+		}
+		return blockeds, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	blockedList, ok := result.([]string)
+	if !ok {
+		return nil, errors.New("failed to cast result to []*string")
+	}
+
+	return blockedList, nil
+}
+
+func (repo *userRepository) UploadProfilePhoto(userID, url string) (bool, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	tx, err := session.BeginTransaction(ctx)
+	if err != nil {
+		return false, err
+	}
+	defer tx.Close(ctx)
+
+	_, err = tx.Run(ctx,
+		"MATCH (u:User {userID: $userID}) SET u.avatar = $url RETURN u",
+		map[string]interface{}{
+			"userID": userID,
+			"url":    url,
+		},
+	)
+	if err != nil {
+		return false, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (repo *userRepository) GetMutualFollowings(targetUserID, userID string) ([]*models.UserSummary, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeRead,
+	})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		records, err := tx.Run(ctx, `
+			MATCH (u1:User {userID: $userID})-[:FOLLOWS]->(mutual:User)<-[:FOLLOWS]-(u2:User {userID: $targetUserID})
+			RETURN mutual.userID AS userID, mutual.fullname AS fullname, mutual.username AS username, mutual.avatar AS avatar
+		`, map[string]interface{}{
+			"userID":       userID,
+			"targetUserID": targetUserID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var mutualFollowings []*models.UserSummary
+		for records.Next(ctx) {
+			record := records.Record()
+			mutualUser := &models.UserSummary{}
+
+			if userIDVal, ok := record.Get("userID"); ok {
+				mutualUser.ID = userIDVal.(string)
+			}
+			if fullnameVal, ok := record.Get("fullname"); ok {
+				mutualUser.FullName = fullnameVal.(string)
+			}
+			if usernameVal, ok := record.Get("username"); ok {
+				mutualUser.Username = usernameVal.(string)
+			}
+			if avatarVal, ok := record.Get("avatar"); ok {
+				mutualUser.Avatar = avatarVal.(string)
+			}
+
+			mutualFollowings = append(mutualFollowings, mutualUser)
+		}
+
+		if err = records.Err(); err != nil {
+			return nil, err
+		}
+		return mutualFollowings, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	mutualFollowingList, ok := result.([]*models.UserSummary)
+	if !ok {
+		return nil, errors.New("failed to cast result to []*models.UserSummary")
+	}
+
+	return mutualFollowingList, nil
+}
+
+func (repo *userRepository) GetMutualFriends(targetUserID, userID string) ([]*models.UserSummary, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeRead,
+	})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		records, err := tx.Run(ctx, `
+			MATCH (u1:User {userID: $userID})-[:FRIEND_WITH]->(mutual:User)<-[:FRIEND_WITH]-(u2:User {userID: $targetUserID})
+			RETURN mutual.userID AS userID, mutual.fullname AS fullname, mutual.username AS username, mutual.avatar AS avatar
+		`, map[string]interface{}{
+			"userID":       userID,
+			"targetUserID": targetUserID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var mutualFriends []*models.UserSummary
+		for records.Next(ctx) {
+			record := records.Record()
+			mutualUser := &models.UserSummary{}
+
+			if userIDVal, ok := record.Get("userID"); ok {
+				mutualUser.ID = userIDVal.(string)
+			}
+			if fullnameVal, ok := record.Get("fullname"); ok {
+				mutualUser.FullName = fullnameVal.(string)
+			}
+			if usernameVal, ok := record.Get("username"); ok {
+				mutualUser.Username = usernameVal.(string)
+			}
+			if avatarVal, ok := record.Get("avatar"); ok {
+				mutualUser.Avatar = avatarVal.(string)
+			}
+
+			mutualFriends = append(mutualFriends, mutualUser)
+		}
+
+		if err = records.Err(); err != nil {
+			return nil, err
+		}
+		return mutualFriends, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	mutualFriendList, ok := result.([]*models.UserSummary)
+	if !ok {
+		return nil, errors.New("failed to cast result to []*models.UserSummary")
+	}
+
+	return mutualFriendList, nil
 }

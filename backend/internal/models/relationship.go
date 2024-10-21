@@ -5,12 +5,12 @@ import "time"
 type RelationshipStatusType string
 
 const (
-	NoRelationship RelationshipStatusType = "noRelationship"
-	IsFollowing    RelationshipStatusType = "isFollowing"
-	IsFollowedBy   RelationshipStatusType = "isFollowedBy"
-	IsBlocking     RelationshipStatusType = "isBlocking"
-	IsBlockedBy    RelationshipStatusType = "isBlocked"
-	IsFriend       RelationshipStatusType = "isFriend"
+	NoRelationship RelationshipStatusType = "No Relationship"
+	Following      RelationshipStatusType = "Following"
+	Follower       RelationshipStatusType = "Followed"
+	Blocking       RelationshipStatusType = "Blocking"
+	Blocked        RelationshipStatusType = "Blocked"
+	Friend         RelationshipStatusType = "Friend"
 )
 
 type RelationshipStatus struct {

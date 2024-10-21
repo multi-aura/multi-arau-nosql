@@ -11,7 +11,7 @@ import (
 )
 
 func AuthMiddleware() fiber.Handler {
-    return func(c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
 		token := c.Get("Authorization")
 		log.Println("Authorization Header:", token)
 

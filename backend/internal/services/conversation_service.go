@@ -4,7 +4,6 @@ import (
 	"errors"
 	"multiaura/internal/models"
 	"multiaura/internal/repositories"
-	"multiaura/internal/websocket/group"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -17,22 +16,20 @@ type ConversationService interface {
 	GetListConversations(id string) ([]models.Conversation, error)
 	RemoveMenberConversation(ConversationID string, UserID string) error
 	AddMembers(conversationID string, userIDs []string) error
-	SendMessage(conversationID, userID string, content models.ChatContent) error
+	SendMessage(conversationID, userID string, content models.ChatContent) (*models.Chat, error)
 	GetMessages(conversationID string) ([]models.Chat, error)
 	MarkMessageAsDeleted(conversationID string, messageID string) error
 }
 
 type conversationService struct {
-	repo            repositories.ConversationRepository
-	userRepo        repositories.UserRepository
-	websocketGroups map[string]*group.Group
+	repo     repositories.ConversationRepository
+	userRepo repositories.UserRepository
 }
 
 func NewConversationService(repo repositories.ConversationRepository, userRepo repositories.UserRepository) ConversationService {
 	return &conversationService{
-		repo:            repo,
-		userRepo:        userRepo,
-		websocketGroups: make(map[string]*group.Group),
+		repo:     repo,
+		userRepo: userRepo,
 	}
 }
 
@@ -61,7 +58,7 @@ func (c *conversationService) CreateConversation(userIDs []string, name string) 
 			Fullname: user.FullName,
 			Avatar:   user.Avatar,
 			Username: user.Username,
-			Added_at: time.Now(),
+			Added_at: time.Now().UTC(),
 		})
 	}
 
@@ -71,8 +68,8 @@ func (c *conversationService) CreateConversation(userIDs []string, name string) 
 		ConversationType: ConversationType,
 		Users:            users,
 		Chats:            []models.Chat{},
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now(),
+		CreatedAt:        time.Now().UTC(),
+		UpdatedAt:        time.Now().UTC(),
 	}
 
 	err := c.repo.Create(newConversation)
@@ -154,7 +151,7 @@ func (c *conversationService) AddMembers(conversationID string, userIDs []string
 				Fullname: user.FullName,
 				Avatar:   user.Avatar,
 				Username: user.Username,
-				Added_at: time.Now(),
+				Added_at: time.Now().UTC(),
 			}
 			newUsers = append(newUsers, newUser)
 		}
@@ -198,17 +195,17 @@ func (c *conversationService) RemoveMenberConversation(ConversationID string, Us
 
 	}
 	conversation.Users = UsersUpdate
-	conversation.UpdatedAt = time.Now()
+	conversation.UpdatedAt = time.Now().UTC()
 	err = c.repo.UpdateRemoveruser(conversation)
 	if err != nil {
 		return errors.New("Failed to update conversation")
 	}
 	return nil
 }
-func (cs *conversationService) SendMessage(conversationID, userID string, content models.ChatContent) error {
+func (cs *conversationService) SendMessage(conversationID, userID string, content models.ChatContent) (*models.Chat, error) {
 	user, err := cs.userRepo.GetByID(userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	newMessage := models.Chat{
@@ -219,32 +216,21 @@ func (cs *conversationService) SendMessage(conversationID, userID string, conten
 			Avatar:   user.Avatar,
 		},
 		Content:   content,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
 		Status:    "sent",
 	}
 
 	// Lưu tin nhắn vào database
 	err = cs.repo.AddMessageToConversation(newMessage, conversationID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// // Phát tin nhắn qua WebSocket tới tất cả các client trong Group
-	// messageData, err := json.Marshal(newMessage)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// if group, ok := cs.websocketGroups[conversationID]; ok {
-	// 	log.Println("Broadcasting message to WebSocket group:", conversationID)
-	// 	group.BroadcastMessage(messageData)
-	// } else {
-	// 	log.Println("No WebSocket group found for conversationID:", conversationID)
-	// }
-
-	return nil
+	// Trả về tin nhắn đã lưu
+	return &newMessage, nil
 }
+
 func (s *conversationService) GetMessages(conversationID string) ([]models.Chat, error) {
 	return s.repo.GetMessagesByConversationID(conversationID)
 }

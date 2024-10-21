@@ -22,8 +22,8 @@ func (u *UserSummary) ToMap() map[string]interface{} {
 	}
 }
 
-func (u *UserSummary) FromMap(data map[string]interface{}) (*User, error) {
-	return &User{
+func (u *UserSummary) FromMap(data map[string]interface{}) (*UserSummary, error) {
+	return &UserSummary{
 		ID:       utils.GetString(data, "userID"),
 		FullName: utils.GetString(data, "fullname"),
 		Username: utils.GetString(data, "username"),

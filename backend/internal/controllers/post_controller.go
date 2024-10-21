@@ -174,7 +174,7 @@ func (pc *PostController) GetRecentPosts(c *fiber.Ctx) error {
 		})
 	}
 
-	var req models.GetRecentPostsRequest
+	var req models.PagingRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
 			Status:  fiber.StatusBadRequest,

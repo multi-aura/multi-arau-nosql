@@ -1,44 +1,68 @@
 .messchat-item {
-  max-width: 60%;
+  display: flex;
+  align-items: center;
   margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 20px;
+}
+
+.messchat-item.sent {
+  justify-content: flex-end; /* Tin nhắn của người khác bên phải */
+
+}
+
+.messchat-item.received {
+  justify-content: flex-start; /* Tin nhắn của bạn bên trái */
+
+}
+.message-content {
+  background-color: #333;
+  color: #fff;
+  padding: 8px 10px; /* Điều chỉnh padding */
+  border-radius: 21px !important;
+  max-width: 60%;
+  display: inline-block;
+}
+
+
+.messchat-item.received .message-content {
+  background-color: #3a3a3a; /* Màu tin nhắn của bạn */
   color: white;
-  display: flex; 
-  align-items: flex-start;
-  clear: both; /* Đảm bảo mỗi tin nhắn nằm riêng một dòng */
+
 }
 
-.sent {
-  background-color: #0066cc;
-  float: right; 
-  border-radius: 20px 20px 0 20px;
-  text-align: right;
-  flex-direction: row-reverse;
-}
+.messchat-item.sent .message-content {
+  background-color: #63afcd47; /* Màu tin nhắn của người khác */
+  color: white;
 
-.received {
-  float: left; /* Đưa tin nhắn của người khác sang bên trái */
-  border-radius: 20px 20px 20px 0;
-  text-align: left;
-}
-
-.message-text {
-  margin: 0;
-}
-
-.message-time {
-  font-size: 12px;
-  color: #ccc;
-  margin-top: 5px;
-  display: block;
-  white-space: nowrap; /* Đảm bảo thời gian nằm trên một dòng */
-  float: right;
 }
 
 .avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
+  margin-right: 10px;
+}
+
+.message-time {
+  font-size: 0.75rem;
+  color: #bbb;
+  margin-top: 5px;
+  display: block;
+  text-align: right;
+}
+.message-text {
+  font-size: 20px;
+  margin-bottom: 5px;
+  padding: 3px 5px;
+  font-family: 'Raleway', sans-serif;
+}
+
+.sender-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+.placeholder-avatar {
+  width: 40px; /* Kích thước tương tự avatar */
+  height: 40px;
+  display: inline-block;
   margin-right: 10px;
 }

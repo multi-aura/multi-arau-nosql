@@ -1,28 +1,29 @@
 import React, { useState } from 'react';
-import { FaSearch } from 'react-icons/fa'; // Thư viện react-icons để dùng icon kính lúp
+
 import MessageItem from '../MessageItem/MessageItem';
 import './SidebarChat.css';
+import { FaSearch } from 'react-icons/fa';
 
-function SidebarChat({ messages = [], onSelectChat }) {
+function SidebarChat({ conversations = [], onSelectChat }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('All'); // All, Group, Single
   const [isSearchVisible, setSearchVisible] = useState(false); // State để kiểm soát hiển thị input
 
-  // Lọc và tìm kiếm tin nhắn
-  const filteredMessages = (messages || [])
-    .filter(message =>
-      message && message.name_conversation && // Kiểm tra message và name_conversation tồn tại
-      message.name_conversation.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .filter(message => {
+  // Lọc và tìm kiếm cuộc trò chuyện
+  const filteredConversations = (conversations || [])
+    .filter(conversation => {
+      // Kiểm tra conversation và name_conversation tồn tại
+      return conversation && conversation.name_conversation &&
+        conversation.name_conversation.toLowerCase().includes(searchTerm.toLowerCase());
+    })
+    .filter(conversation => {
       if (filterType === 'Group') {
-        return message.conversation_type === 'Group';
+        return conversation.conversation_type === 'Group';
       } else if (filterType === 'Single') {
-        return message.conversation_type === 'Private';
+        return conversation.conversation_type === 'Single'; // Kiểm tra đúng với kiểu "Single"
       }
       return true;
     });
-
 
   return (
     <div className="sidebar-container">
@@ -60,12 +61,12 @@ function SidebarChat({ messages = [], onSelectChat }) {
       </div>
 
       <ul className="message-list">
-        {filteredMessages.length > 0 ? (
-          filteredMessages.map((message, index) => (
+        {filteredConversations.length > 0 ? (
+          filteredConversations.map((conversation, index) => (
             <MessageItem
               key={index}
-              message={message}
-              onClick={() => onSelectChat(message._id)}
+              message={conversation}
+              onClick={() => onSelectChat(conversation._id)} // Đổi `message._id` thành `conversation._id`
             />
           ))
         ) : (

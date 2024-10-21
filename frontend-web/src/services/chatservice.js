@@ -2,7 +2,6 @@ import axios from 'axios';
 import { API_URL } from '../config/config';
 import Cookies from 'js-cookie';
 
-//service: tầng này nó sẽ tương tác với UI
 const CONVERSATION_URL = `${API_URL}/conversation`;
 
 export const getUserConversation = async (userID) => {
@@ -37,9 +36,6 @@ export const getConversationDetails = async (conversationID) => {
     }
 };
 export const sendMessageToConversation = async (conversationID, userID, content) => {
-    console.log('conversationID:', conversationID);
-    console.log('userID:', userID);
-    console.log('content:', content);
 
     try {
         const token = Cookies.get('authToken');
@@ -51,9 +47,15 @@ export const sendMessageToConversation = async (conversationID, userID, content)
                 Authorization: `Bearer ${token}`
             }
         });
-   
-        console.log('response:', response);
-        return response.data.data;
+
+
+        // Kiểm tra nếu response.data.data không tồn tại, bạn có thể log một cảnh báo
+        if (!response.data.data) {
+            console.warn('API response does not contain expected "data" field:', response.data);
+            return null;
+        }
+
+        return response.data.data; // Trả về dữ liệu tin nhắn
     } catch (error) {
         console.log(`Failed to send message for conversation with ID ${conversationID}`, error);
         throw error;

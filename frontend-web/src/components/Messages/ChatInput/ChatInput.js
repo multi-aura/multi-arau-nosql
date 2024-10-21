@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+
 
 // Hàm kiểm tra URL hình ảnh hợp lệ
 const isValidImageURL = (url) => {
@@ -53,9 +55,11 @@ const ChatInput = ({ onSendMessage }) => {
         placeholder="Nhập tin nhắn, URL hình ảnh hoặc âm thanh..."
         className="input-message"
       />
-      <button onClick={handleSendMessage} disabled={!message.trim()}>
-        Gửi
+      <button onClick={handleSendMessage} disabled={!message.trim()} >
+        <i className="fas fa-paper-plane" ></i>
       </button>
+
+
     </div>
   );
 };

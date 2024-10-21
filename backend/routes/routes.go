@@ -25,4 +25,6 @@ func SetupRoutes(app *fiber.App) {
 	SetupRelationshipRoutes(app)
 	SetupConversationRoutes(app)
 	SetupPostRoutes(app)
+	SetupSearchRoutes(app)
+	SetupUploadRoutes(app)
 }

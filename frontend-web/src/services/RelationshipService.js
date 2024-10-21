@@ -3,6 +3,7 @@ import { API_URL } from '../config/config';
 import Cookies from 'js-cookie';
 
 const RELATIONSHIPS_URL = `${API_URL}/relationships`;
+const FOLLOW_URL = `${RELATIONSHIPS_URL}/follow`;
 export const getFriends = async () => {
     try {
       const token = Cookies.get('authToken');
@@ -51,6 +52,7 @@ export const getFollowings = async () => {
       throw error;
     }
 };
+
 export const unfollowUser = async (userID) => {
   try {
       const token = Cookies.get('authToken');
@@ -66,4 +68,55 @@ export const unfollowUser = async (userID) => {
       console.error(`Fail to unfollow user ${userID}:`, error);
       throw error;
   }
+};
+
+export const followUser = async (userID) => {
+  try {
+      const token = Cookies.get('authToken');
+      if (!token) {
+          throw new Error('Token không tồn tại. Vui lòng đăng nhập.');
+      }
+
+      const response = await axios.post(`${FOLLOW_URL}/${userID}`, {}, {
+          headers: {
+              Authorization: `Bearer ${token}`,
+          },
+      });
+      
+      return response.data;
+  } catch (error) {
+      console.error('Fail to follow this user:', error.response ? error.response.data : error.message);
+      throw error;
+  }
+};
+export const checkRelationshipStatus = async (userID) => {
+  try {
+    const token = Cookies.get('authToken');
+
+    const response = await axios.post(`${RELATIONSHIPS_URL}/status/${userID}`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`, 
+      },
+    });
+    
+    return response.data.data; 
+  } catch (error) {
+    console.error('Fail to check Relationship:', error);
+    throw error;
+  }
+};
+export const blockUser = async (userID) => {
+  const token = Cookies.get('authToken');
+  const response = await axios.post(`${RELATIONSHIPS_URL}/block/${userID}`, {}, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const unblockUser = async (userID) => {
+  const token = Cookies.get('authToken');
+  const response = await axios.post(`${RELATIONSHIPS_URL}/unblock/${userID}`, {}, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
 };
