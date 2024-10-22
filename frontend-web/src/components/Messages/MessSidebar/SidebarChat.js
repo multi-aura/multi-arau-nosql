@@ -1,29 +1,75 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
 import MessageItem from '../MessageItem/MessageItem';
 import './SidebarChat.css';
 import { FaSearch } from 'react-icons/fa';
 
-function SidebarChat({ conversations = [], onSelectChat }) {
+function SidebarChat({ conversations = [], onSelectChat, newMessageItems }) {
+  console.log(conversations);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('All'); // All, Group, Single
   const [isSearchVisible, setSearchVisible] = useState(false); // State để kiểm soát hiển thị input
+  const [filteredConversations, setFilteredConversations] = useState([]);
+  const [sortedConversations, setSortedConversations] = useState([]);
 
-  // Lọc và tìm kiếm cuộc trò chuyện
-  const filteredConversations = (conversations || [])
-    .filter(conversation => {
-      // Kiểm tra conversation và name_conversation tồn tại
-      return conversation && conversation.name_conversation &&
-        conversation.name_conversation.toLowerCase().includes(searchTerm.toLowerCase());
-    })
-    .filter(conversation => {
-      if (filterType === 'Group') {
-        return conversation.conversation_type === 'Group';
-      } else if (filterType === 'Single') {
-        return conversation.conversation_type === 'Single'; // Kiểm tra đúng với kiểu "Single"
-      }
-      return true;
-    });
+  // Sắp xếp các cuộc trò chuyện dựa trên tin nhắn mới nhất (updatedat)
+  useEffect(() => {
+    if (conversations.length > 0) {
+      const sorted = conversations.slice().sort((a, b) => {
+        const lastMessageA = a.chats.length > 0 ? a.chats[a.chats.length - 1].updatedat : '0000-00-00T00:00:00Z';
+        const lastMessageB = b.chats.length > 0 ? b.chats[b.chats.length - 1].updatedat : '0000-00-00T00:00:00Z';
+        return new Date(lastMessageB) - new Date(lastMessageA);
+      });
+      setSortedConversations(sorted);
+    }
+  }, [conversations]);
+
+  // Lọc và tìm kiếm cuộc trò chuyện dựa trên danh sách đã sắp xếp
+  useEffect(() => {
+    const filtered = sortedConversations
+      .filter(conversation => {
+        return conversation && conversation.name_conversation &&
+          conversation.name_conversation.toLowerCase().includes(searchTerm.toLowerCase());
+      })
+      .filter(conversation => {
+        if (filterType === 'Group') {
+          return conversation.conversation_type === 'Group';
+        } else if (filterType === 'Single') {
+          return conversation.conversation_type === 'Single';
+        }
+        return true;
+      });
+
+    setFilteredConversations(filtered);
+  }, [sortedConversations, searchTerm, filterType]);
+
+  // Cập nhật tin nhắn mới vào cuộc trò chuyện và sắp xếp lại
+  useEffect(() => {
+    if (newMessageItems) {
+      setSortedConversations((prevConversations) => {
+        const updatedConversations = prevConversations.map(conversation => {
+          if (conversation._id === newMessageItems.conversationID) {
+            // Cập nhật tin nhắn và thời gian tin nhắn cuối cùng
+            return {
+              ...conversation,
+              lastMessage: newMessageItems.content.text || "",
+              lastMessageTime: newMessageItems.createdat || new Date().toISOString(),
+              chats: [...conversation.chats, { ...newMessageItems, updatedat: newMessageItems.createdat }]
+            };
+          }
+          return conversation;
+        });
+
+        // Sắp xếp lại danh sách dựa trên tin nhắn mới nhất
+        const sorted = updatedConversations.slice().sort((a, b) => {
+          const lastMessageA = a.chats.length > 0 ? a.chats[a.chats.length - 1].updatedat : '0000-00-00T00:00:00Z';
+          const lastMessageB = b.chats.length > 0 ? b.chats[b.chats.length - 1].updatedat : '0000-00-00T00:00:00Z';
+          return new Date(lastMessageB) - new Date(lastMessageA);
+        });
+        return sorted;
+      });
+    }
+  }, [newMessageItems]);
 
   return (
     <div className="sidebar-container">
@@ -66,13 +112,17 @@ function SidebarChat({ conversations = [], onSelectChat }) {
             <MessageItem
               key={index}
               message={conversation}
-              onClick={() => onSelectChat(conversation._id)} // Đổi `message._id` thành `conversation._id`
+              onClick={() => onSelectChat(conversation._id)}
             />
           ))
         ) : (
-          <li className="no-messages">No messages found</li>
+          <li className="no-messages">
+            <span role="img" aria-label="no-messages" className="no-messages-icon">📭</span>
+            No messages found
+          </li>
         )}
       </ul>
+
     </div>
   );
 }

@@ -1,10 +1,17 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import ChatHeader from '../ChatHeader/ChatHeader';
 import MessageBubble from '../MessageBubble/MessageBubble';
 import ChatInput from '../ChatInput/ChatInput';
 import './ChatContent.css';
 
 const ChatContent = ({ chat, messages, onSendMessage, currentUserID }) => {
+  const messageEndRef = useRef(null); // Tạo tham chiếu để cuộn đến cuối
+
+  // Tự động cuộn xuống cuối khi có tin nhắn mới
+  useEffect(() => {
+    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   const handleSendMessage = async (messageContent) => {
     try {
       const newMessage = await onSendMessage(messageContent);
@@ -50,6 +57,8 @@ const ChatContent = ({ chat, messages, onSendMessage, currentUserID }) => {
             </p>
           </div>
         )}
+        {/* Phần tử trống để cuộn tới */}
+        <div ref={messageEndRef} />
       </div>
       <ChatInput onSendMessage={handleSendMessage} />
     </div>

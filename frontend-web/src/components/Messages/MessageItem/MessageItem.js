@@ -39,17 +39,23 @@ const MessageItem = ({ message, currentUserID, onClick }) => {
   // Hiển thị thời gian nếu tồn tại
   let timeDisplay = '';
   if (lastMessageDate) {
-    const timeDiff = (new Date() - lastMessageDate) / (1000 * 60 * 60); // Tính số giờ
-    if (timeDiff < 24) {
-      timeDisplay = `${Math.floor(timeDiff)} hours ago`;
+    const timeDiff = (new Date() - lastMessageDate) / 1000; // Tính số giây
+    if (timeDiff < 60) {
+      timeDisplay = `${Math.floor(timeDiff)} seconds ago`;
+    } else if (timeDiff < 3600) {
+      const minutes = Math.floor(timeDiff / 60);
+      timeDisplay = `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    } else if (timeDiff < 86400) {
+      const hours = Math.floor(timeDiff / 3600);
+      timeDisplay = `${hours} hour${hours > 1 ? 's' : ''} ago`;
     } else {
-      const days = Math.floor(timeDiff / 24);
+      const days = Math.floor(timeDiff / 86400);
       timeDisplay = `${days} day${days > 1 ? 's' : ''} ago`;
     }
   }
-
+  
   return (
-    <li className="list-group-item d-flex align-items-center message-item" style={{ borderBottom: "1px solid white" }} onClick={onClick}>
+    <li className="list-group-item d-flex align-items-center message-item" style={{ borderBottom: "1px solid #333" }} onClick={onClick}>
       <img src={avatar} alt="profile" className="avatar rounded-circle me-3" />
 
       <div className="message-info">
