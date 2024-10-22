@@ -30,6 +30,7 @@ type (
 		Users            []Users            `json:"users" bson:"users" form:"users"`
 		Chats            []Chat             `json:"chats" bson:"chats" form:"chats"`
 		SeenBy           []SeenBy           `json:"seen_by" bson:"seen_by" form:"seen_by"`
+		Thumb_group      string             `json:"thumb_group" bson:"thumb_group" form:"thumb_group"`
 		CreatedAt        time.Time          `json:"createdat" bson:"createdat" form:"createdat"`
 		UpdatedAt        time.Time          `json:"updatedat" bson:"updatedat" form:"updatedat"`
 	}

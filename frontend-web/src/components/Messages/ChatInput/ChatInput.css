@@ -1,24 +1,29 @@
 .chat-input {
-  border-top: 1px solid #333;
-  padding-top: 10px;
   display: flex;
-}
-
-.chat-input input {
-  background-color: #1a1a1a;
-  color: white;
-  border: none;
+  align-items: center;
   padding: 10px;
-  border-radius: 25px;
-  flex-grow: 1;
+  border-top: 1px solid #ccc;
 }
 
-.send-btn {
-  background-color: #505050;
-  border: none;
+.input-message {
+  flex: 1;
+  padding: 10px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  margin-right: 10px;
+}
+
+.send-button {
+  padding: 10px 20px;
+  background-color: #404850;
   color: white;
-  padding: 10px 15px;
-  border-radius: 25px;
-  margin-left: 10px;
+  border: none;
+  border-radius: 20px;
   cursor: pointer;
 }
+
+.send-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+

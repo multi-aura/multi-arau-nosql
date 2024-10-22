@@ -177,8 +177,8 @@ func (cc *ConversationController) SendMessage(c *fiber.Ctx) error {
 		Content models.ChatContent `json:"content"`
 	}
 
+	// Phân tích và parse dữ liệu JSON
 	if err := c.BodyParser(&messageData); err != nil {
-
 		return c.Status(fiber.StatusOK).JSON(APIResponse.ErrorResponse{
 			Status:  fiber.StatusBadRequest,
 			Message: "Cannot send messages of conversation",
@@ -186,23 +186,24 @@ func (cc *ConversationController) SendMessage(c *fiber.Ctx) error {
 		})
 	}
 
-	// Gọi service để gửi tin nhắn
-	err := cc.service.SendMessage(conversationID, messageData.UserID, messageData.Content)
+	// Gọi service để gửi tin nhắn và nhận lại tin nhắn đã lưu
+	savedMessage, err := cc.service.SendMessage(conversationID, messageData.UserID, messageData.Content)
 	if err != nil {
-
 		return c.Status(fiber.StatusOK).JSON(APIResponse.ErrorResponse{
 			Status:  fiber.StatusInternalServerError,
 			Message: "Cannot send messages of conversation",
 			Error:   "StatusInternalServerError",
 		})
 	}
+
+	// Trả về tin nhắn đã lưu trong trường Data
 	return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
 		Status:  fiber.StatusOK,
 		Message: "Message sent successfully.",
-		Data:    nil,
+		Data:    savedMessage, // Trả về tin nhắn đã lưu
 	})
-
 }
+
 func (cc *ConversationController) GetMessages(c *fiber.Ctx) error {
 	conversationID := c.Params("conversationID")
 

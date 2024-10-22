@@ -4,25 +4,54 @@ import MessageBubble from '../MessageBubble/MessageBubble';
 import ChatInput from '../ChatInput/ChatInput';
 import './ChatContent.css';
 
-const ChatContent = ({ chat, onSendMessage }) => {
-  // Sắp xếp tin nhắn theo thời gian từ cũ đến mới
-  const sortedMessages = [...chat.messages].sort((a, b) => new Date(a.time) - new Date(b.time));
+const ChatContent = ({ chat, messages, onSendMessage, currentUserID }) => {
+  const handleSendMessage = async (messageContent) => {
+    try {
+      const newMessage = await onSendMessage(messageContent);
+      if (newMessage) {
+        // Sau khi gửi tin nhắn thành công, parent component sẽ tự cập nhật `messages`
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại.');
+    }
+  };
 
   return (
     <div className="chat-content">
-      <ChatHeader user={chat.user} />
-
+      <ChatHeader user={chat} />
       <div className="chat-messages">
-        {sortedMessages.map((message, index) => (
-          <MessageBubble 
-            key={index} 
-            message={message} 
-            userAvatar={!message.isSentByUser ? chat.user.avatar : null}
-          />
-        ))}
-      </div>
+        {messages.length > 0 ? (
+          messages.map((message, index) => {
+            // Kiểm tra tin nhắn trước và tin nhắn tiếp theo
+            const previousMessage = messages[index - 1];
+            const nextMessage = messages[index + 1];
+            const isSameSenderAsPrevious = previousMessage && previousMessage.sender.userID === message.sender.userID;
+            const isLastMessageFromSameSender = !nextMessage || nextMessage.sender.userID !== message.sender.userID;
 
-      <ChatInput onSendMessage={onSendMessage} />
+            // Hiển thị tên người gửi nếu là tin nhắn đầu tiên trong chuỗi của họ
+            const showSenderInfo = !isSameSenderAsPrevious;
+
+            return (
+              <MessageBubble
+                key={index}
+                message={message}
+                userAvatar={message.sender?.avatar || 'default-avatar.png'}
+                currentUserID={currentUserID}
+                showSenderInfo={showSenderInfo} // Hiển thị tên người gửi khi cần
+                showTime={isLastMessageFromSameSender} // Hiển thị thời gian cho tin nhắn cuối cùng trong chuỗi
+              />
+            );
+          })
+        ) : (
+          <div className="no-message-container">
+            <p className="no-message-text">
+              Chưa có tin nhắn nào... nhưng đây chỉ là sự khởi đầu! Hãy gửi một lời chào thật ấm áp hoặc một câu chuyện thú vị để bắt đầu cuộc trò chuyện.
+            </p>
+          </div>
+        )}
+      </div>
+      <ChatInput onSendMessage={handleSendMessage} />
     </div>
   );
 };
