@@ -11,7 +11,7 @@
   /* Màu chữ trắng */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   /* Hiệu ứng bóng đổ */
-  margin: 10px 0;
+  margin: 5px 0;
   /* Khoảng cách phía trên và dưới */
   transition: background-color 0.3s ease;
   /* Hiệu ứng khi hover */

@@ -114,3 +114,42 @@
     - Thành công: người dùng sẽ được chuyển đến trang chủ.
     - Thất bại: người dùng sẽ nhận được thông báo kiểm tra lại thông tin.
 
+<p>+ Quy trình quản lý hồ sơ cá nhân (Profile Management):</p>
+- Mô tả: Người dùng có thể cập nhật thông tin cá nhân và quản lý quyền riêng tư của hồ sơ.
+
+- Quy trình:
+
+  1 Người dùng truy cập trang quản lý hồ sơ:
+
+   - Người dùng chọn phần "Hồ sơ" trong ứng dụng để xem và chỉnh sửa thông tin cá nhân.
+     
+  2 Người dùng cập nhật thông tin cá nhân:
+
+   - Người dùng có thể thay đổi tên, ảnh đại diện, giới tính, ngày sinh, địa chỉ hoặc các thông tin khác.
+     
+  3 Hệ thống lưu thông tin cập nhật:
+
+   - Sau khi người dùng chỉnh sửa, hệ thống ghi nhận và cập nhật thông tin cá nhân trong cơ sở dữ liệu.
+     
+  4 Quản lý quyền riêng tư:
+
+   - Người dùng có thể cài đặt quyền riêng tư cho hồ sơ (Công khai, Bạn bè, Cá nhân) để quyết định ai có thể xem thông tin của họ.
+
+
+<p>+ Tìm kiếm bạn bè:</p>
+- Mô tả: Người dùng có thể tìm kiếm bạn bè qua tên, email hoặc username.
+
+- Quy trình:
+
+   1 Người dùng nhập từ khóa tìm kiếm:
+
+    - Người dùng nhập tên, email hoặc username vào thanh tìm kiếm.
+      
+   2 Hệ thống tìm kiếm và hiển thị kết quả:
+
+    - Hệ thống truy vấn cơ sở dữ liệu và trả về danh sách người dùng phù hợp với từ khóa.
+      
+   3 Người dùng có thể gửi lời mời kết bạn:
+
+    - Người dùng có thể chọn từ danh sách kết quả và gửi lời mời kết bạn.
+

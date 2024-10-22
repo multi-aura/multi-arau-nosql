@@ -94,3 +94,41 @@
   color: #888;
   padding: 20px;
 }
+/* Hiệu ứng khi hover vào dropdown */
+.form-select:hover {
+  background-color: #333;
+}
+
+/* Hiệu ứng mượt khi chuyển trạng thái tìm kiếm */
+.search-input {
+  width: 0;
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: none;
+  outline: none;
+  background-color: #1a1a1a;
+  color: white;
+  transition: width 0.3s ease, padding 0.3s ease; /* Hiệu ứng mở rộng */
+}
+
+.sidebar-header .search-input.open {
+  width: 100%; /* Chiếm toàn bộ không gian khi mở */
+  padding: 5px 10px;
+}
+
+/* Căn giữa thông báo không có tin nhắn */
+.no-messages {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Thêm biểu tượng cho "Không có tin nhắn" */
+.no-messages:before {
+  content: "📭";
+  display: block;
+  font-size: 50px;
+  margin-bottom: 10px;
+}

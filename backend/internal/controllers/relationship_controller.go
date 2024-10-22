@@ -357,6 +357,40 @@ func (uc *RelationshipController) GetFollowings(c *fiber.Ctx) error {
 	})
 }
 
+func (uc *RelationshipController) GetBlockedUsers(c *fiber.Ctx) error {
+	userID, ok := c.Locals("userID").(string)
+	if !ok || userID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusUnauthorized,
+			Message: "Unauthorized",
+			Error:   "StatusUnauthorized",
+		})
+	}
+
+	followings, err := uc.service.GetBlockedUsers(userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusInternalServerError,
+			Message: "Fail to get blocked users",
+			Error:   "StatusInternalServerError",
+		})
+	}
+
+	if len(followings) == 0 {
+		return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
+			Status:  fiber.StatusOK,
+			Message: "No blocked users found",
+			Data:    followings,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
+		Status:  fiber.StatusOK,
+		Message: "Blocked users retrieved successfully",
+		Data:    followings,
+	})
+}
+
 func (uc *RelationshipController) GetProfile(c *fiber.Ctx) error {
 	username := c.Params("username")
 	if username == "" {

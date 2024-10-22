@@ -9,7 +9,7 @@ function Layout({ children, userData }) {
       <Sidebar />
       <div className="main-content">
         <Header userData={userData} />
-        <div className="content-area">
+        <div className="content-area" >
           {children}
         </div>
       </div>

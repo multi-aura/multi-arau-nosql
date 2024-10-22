@@ -13,7 +13,7 @@ function ChatPage() {
   const [currentChat, setCurrentChat] = useState(null);
   const [loadingChat, setLoadingChat] = useState(false);
   const ws = useRef(null);
-
+  const [newMessageItems, setNewMessageItems] = useState(null);
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -29,7 +29,6 @@ function ChatPage() {
       // Lắng nghe sự kiện khi có tin nhắn mới từ server qua WebSocket
       ws.current.onmessage = (event) => {
         const receivedMessage = JSON.parse(event.data);
-        console.log("Received message from WebSocket:", receivedMessage);
 
         // Cập nhật messages với tin nhắn mới
         if (receivedMessage.conversationID === currentChat._id) {
@@ -39,14 +38,11 @@ function ChatPage() {
               prevMessages = [];  // Đặt lại thành mảng rỗng nếu không phải là mảng
             }
 
-            // Thêm tin nhắn mới vào danh sách
             const updatedMessages = [...prevMessages, receivedMessage];
-
-            // In ra danh sách tin nhắn sau khi cập nhật để kiểm tra
-            console.log("Updated messages list:", updatedMessages);
 
             return updatedMessages;
           });
+          setNewMessageItems(receivedMessage);
 
 
         } else {
@@ -65,7 +61,6 @@ function ChatPage() {
     }
   }, [userData, currentChat]);
 
-  // Lấy danh sách các cuộc trò chuyện của người dùng
   // Lấy danh sách các cuộc trò chuyện của người dùng
   useEffect(() => {
     const fetchUserConversation = async () => {
@@ -137,7 +132,8 @@ function ChatPage() {
     } catch (error) {
       console.error("Error sending message:", error);
     }
-
+    // Cập nhật tin nhắn mới và truyền qua Sidebar
+    setNewMessageItems(messageData);
   };
 
 
@@ -147,17 +143,14 @@ function ChatPage() {
       <div className="container-fluid chat-page">
         <div className="row">
           <div className="col-lg-3 col-md-3 col-sm-12 sidebar-wrapper">
-            <Sidebar conversations={conversations} onSelectChat={handleSelectChatMessage} />
+            <Sidebar conversations={conversations} onSelectChat={handleSelectChatMessage} newMessageItems={newMessageItems} />
           </div>
-          <div className="col-lg-9 col-md-9 col-sm-12 chat-content-wrapper" style={{ height: "90vh", padding: '0px 10px' }}>
+          <div className="col-lg-9 col-md-9 col-sm-12 chat-content-wrapper" style={{ height: "90vh", padding: '0px 0px' }}>
             {loadingChat ? (
               <div>Loading chat...</div>
             ) : currentChat ? (
               <>
                 <ChatContent chat={currentChat} messages={messages} currentUserID={userData.userID} onSendMessage={handleSendMessage} />
-
-
-
               </>
             ) : (
               <div>Please select a chat to view</div>

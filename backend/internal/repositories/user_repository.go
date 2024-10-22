@@ -32,6 +32,7 @@ type UserRepository interface {
 	GetFollowers(userID string) ([]*models.UserSummary, error)
 	GetFollowings(userID string) ([]*models.UserSummary, error)
 	GetBlockedList(userID string) ([]string, error)
+	GetBlockedUsers(userID string) ([]*models.UserSummary, error)
 	GetRelationship(targetUserID, userID string) (models.RelationshipStatus, error)
 	Search(userID, query string, page, limit int) ([]*models.OtherUser, error)
 	GetSuggestedFriends(userID string, page, limit int) ([]*models.OtherUser, error)
@@ -1159,6 +1160,66 @@ func (repo *userRepository) GetBlockedList(userID string) ([]string, error) {
 	}
 
 	return blockedList, nil
+}
+
+func (repo *userRepository) GetBlockedUsers(userID string) ([]*models.UserSummary, error) {
+	ctx := context.Background()
+	session := repo.db.Driver.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeRead,
+	})
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		records, err := tx.Run(ctx, `
+			MATCH (u:User{userID: $userID})-[:BLOCKED]->(f:User)
+			RETURN f.userID AS userID, f.fullname AS fullname, f.username AS username, f.avatar AS avatar
+		`, map[string]interface{}{
+			"userID": userID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var followings []*models.UserSummary
+		for records.Next(ctx) {
+			record := records.Record()
+			followingUser := &models.UserSummary{}
+
+			if userIDVal, ok := record.Get("userID"); ok {
+				followingUser.ID = userIDVal.(string)
+			}
+			if fullnameVal, ok := record.Get("fullname"); ok {
+				followingUser.FullName = fullnameVal.(string)
+			}
+			if usernameVal, ok := record.Get("username"); ok {
+				followingUser.Username = usernameVal.(string)
+			}
+			if avatarVal, ok := record.Get("avatar"); ok {
+				followingUser.Avatar = avatarVal.(string)
+			}
+			if isActive, ok := record.Get("isActive"); ok {
+				followingUser.IsActive = isActive.(bool)
+			}
+
+			followings = append(followings, followingUser)
+		}
+
+		if err = records.Err(); err != nil {
+			return nil, err
+		}
+		return followings, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	followingList, ok := result.([]*models.UserSummary)
+	if !ok {
+		return nil, errors.New("failed to cast result to []*models.UserSummary")
+	}
+
+	return followingList, nil
 }
 
 func (repo *userRepository) UploadProfilePhoto(userID, url string) (bool, error) {
