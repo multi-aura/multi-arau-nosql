@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log"
 	"multiaura/internal/models"
 	"multiaura/internal/services"
 	APIResponse "multiaura/pkg/api_response"
@@ -48,30 +49,39 @@ func (cc *ConversationController) CreateConversation(c *fiber.Ctx) error {
 
 }
 func (cc *ConversationController) GetConversationByID(c *fiber.Ctx) error {
-	// Lấy conversationID từ params
-	conversationID := c.Params("conversationID")
 
-	if conversationID == "" {
+	conversationID := c.Params("conversationID")
+	userID := c.Params("userID")
+
+	if conversationID == "" || userID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
 			Status:  fiber.StatusBadRequest,
-			Message: "Missing conversationID parameter",
+			Message: "Missing conversationID or userID parameter",
 			Error:   "BadRequest",
 		})
 	}
 
-	// Gọi service để lấy thông tin cuộc trò chuyện
+	// Gọi service để cập nhật trạng thái tin nhắn đã đọc
+	err := cc.service.MarkMessagesAsRead(conversationID, userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusInternalServerError,
+			Message: "Fail to mark messages as read",
+			Error:   "StatusInternalServerError",
+		})
+	}
+
+	// Lấy thông tin cuộc trò chuyện sau khi đánh dấu tin nhắn là đã đọc
 	conversation, err := cc.service.GetConversationByID(conversationID)
 	if err != nil {
-		// Kiểm tra từng loại lỗi cụ thể và trả về phản hồi phù hợp
-		switch err.Error() {
-		case "conversation not found":
-			return c.Status(fiber.StatusNotFound).JSON(APIResponse.ErrorResponse{
-				Status:  fiber.StatusNotFound,
-				Message: "The conversation was not found",
-				Error:   "ConversationNotFound",
-			})
-		}
+		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusInternalServerError,
+			Message: "Fail to get conversation",
+			Error:   "StatusInternalServerError",
+		})
 	}
+
+	// Trả về thông tin cuộc trò chuyện
 	return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
 		Status:  fiber.StatusOK,
 		Message: "Get Conversation successfully",
@@ -239,5 +249,43 @@ func (cc *ConversationController) MarkMessageAsDeleted(c *fiber.Ctx) error {
 		Status:  fiber.StatusOK,
 		Message: "Message marked as deleted successfully",
 		Data:    nil,
+	})
+}
+func (cc *ConversationController) GetUnreadCount(c *fiber.Ctx) error {
+	userID := c.Params("userID")
+	log.Println("Received request for unread count for userID:", userID)
+	if userID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusBadRequest,
+			Message: "Missing userID parameter",
+			Error:   "BadRequest",
+		})
+	}
+
+	// Gọi service để lấy danh sách các cuộc trò chuyện và số tin nhắn chưa đọc
+	conversations, err := cc.service.GetListConversations(userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(APIResponse.ErrorResponse{
+			Status:  fiber.StatusInternalServerError,
+			Message: "Failed to get conversations",
+			Error:   "InternalServerError",
+		})
+	}
+
+	// Tính tổng số tin nhắn chưa đọc
+	totalUnreadCount := 0
+	for _, conversation := range conversations {
+		for _, user := range conversation.Users {
+			if user.UserID == userID {
+				totalUnreadCount += user.UnreadCount
+			}
+		}
+	}
+
+	// Trả về tổng số tin nhắn chưa đọc
+	return c.Status(fiber.StatusOK).JSON(APIResponse.SuccessResponse{
+		Status:  fiber.StatusOK,
+		Message: "Unread count retrieved successfully",
+		Data:    totalUnreadCount,
 	})
 }

@@ -21,6 +21,7 @@ type (
 		CreatedAt time.Time          `json:"createdat" bson:"createdat" form:"createdat"`
 		UpdatedAt time.Time          `json:"updatedat" bson:"updatedat" form:"updatedat"`
 		Status    string             `json:"status" bson:"status" form:"status"`
+		Unread    bool               `json:"unread" bson:"unread" form:"unread"`
 	}
 
 	Conversation struct {

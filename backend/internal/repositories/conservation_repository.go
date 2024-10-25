@@ -20,6 +20,7 @@ type ConversationRepository interface {
 	AddMessageToConversation(message models.Chat, conversationID string) error
 	GetMessagesByConversationID(conversationID string) ([]models.Chat, error)
 	MarkMessageAsDeleted(conversationID string, messageID string) error
+	MarkMessagesAsRead(conversationID string, userID string) error
 }
 
 type conversationRepository struct {
@@ -137,6 +138,7 @@ func (repo *conversationRepository) GetListConversations(userID string) ([]model
 
 	return conversations, nil
 }
+
 func (repo *conversationRepository) AddMemberToConversation(users []models.Users, id_conversation string) error {
 	id_conversationRepository, err := primitive.ObjectIDFromHex(id_conversation)
 	if err != nil {
@@ -222,5 +224,31 @@ func (r *conversationRepository) MarkMessageAsDeleted(conversationID string, mes
 	if result.ModifiedCount == 0 {
 		log.Println("No document was updated.")
 	}
+	return nil
+}
+func (repo *conversationRepository) MarkMessagesAsRead(conversationID string, userID string) error {
+	objectID, err := primitive.ObjectIDFromHex(conversationID)
+	if err != nil {
+		return err
+	}
+
+	// Cập nhật tất cả tin nhắn `unread = true` thành `false` cho userID
+	filter := bson.M{"_id": objectID, "chats.unread": true, "chats.sender.userID": bson.M{"$ne": userID}}
+	update := bson.M{"$set": bson.M{"chats.$[].unread": false}}
+
+	_, err = repo.collection.UpdateMany(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	// Đặt lại `unreadCount` về 0 cho người dùng
+	filterUser := bson.M{"_id": objectID, "users.userID": userID}
+	updateUser := bson.M{"$set": bson.M{"users.$.unreadCount": 0}}
+
+	_, err = repo.collection.UpdateOne(context.Background(), filterUser, updateUser)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -16,10 +16,9 @@ func SetupConversationRoutes(app *fiber.App) {
 	controller := controllers.NewConversationController(service)
 
 	conversation := app.Group("/conversation")
-
-	conversation.Get("/:conversationID", controller.GetConversationByID)
-	conversation.Post("/create-conversation", controller.CreateConversation)
 	conversation.Get("/get-user-conversations/:userID", controller.GetListConversation)
+	conversation.Get("detais-coversation/:conversationID/:userID", controller.GetConversationByID)
+	conversation.Post("/create-conversation", controller.CreateConversation)
 	conversation.Post("/add-member-message/:conversationID", controller.AddMember)
 	conversation.Delete("/remove-member-conversation/:conversationID/:userID", controller.RemoveMemberConversation)
 	conversation.Post("/send-message/:conversationID", controller.SendMessage)
