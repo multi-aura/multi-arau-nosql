@@ -83,7 +83,7 @@ function ChatPage() {
   const handleSelectChatMessage = async (conversationID) => {
     setLoadingChat(true);
     try {
-      const conversationData = await getConversationDetails(conversationID);
+      const conversationData = await getConversationDetails(conversationID, userData.userID);
       if (conversationData.users && conversationData.users.length > 0) {
         setCurrentChat(conversationData);
         setMessages(conversationData.chats || []);  // Cập nhật tin nhắn của cuộc trò chuyện

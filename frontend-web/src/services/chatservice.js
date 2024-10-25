@@ -20,10 +20,10 @@ export const getUserConversation = async (userID) => {
     }
 }
 
-export const getConversationDetails = async (conversationID) => {
+export const getConversationDetails = async (conversationID, userID) => {
     try {
         const token = Cookies.get('authToken');
-        const response = await axios.get(`${CONVERSATION_URL}/${conversationID}`, {
+        const response = await axios.get(`${CONVERSATION_URL}/detais-coversation/${conversationID}/${userID}`, {
 
             headers: {
                 Authorization: `Bearer ${token}`

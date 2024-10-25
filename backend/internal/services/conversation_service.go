@@ -19,6 +19,7 @@ type ConversationService interface {
 	SendMessage(conversationID, userID string, content models.ChatContent) (*models.Chat, error)
 	GetMessages(conversationID string) ([]models.Chat, error)
 	MarkMessageAsDeleted(conversationID string, messageID string) error
+	MarkMessagesAsRead(conversationID string, userID string) error
 }
 
 type conversationService struct {
@@ -54,11 +55,12 @@ func (c *conversationService) CreateConversation(userIDs []string, name string) 
 		}
 
 		users = append(users, models.Users{
-			UserID:   user.ID,
-			Fullname: user.FullName,
-			Avatar:   user.Avatar,
-			Username: user.Username,
-			Added_at: time.Now().UTC(),
+			UserID:      user.ID,
+			Fullname:    user.FullName,
+			Avatar:      user.Avatar,
+			Username:    user.Username,
+			Added_at:    time.Now().UTC(),
+			UnreadCount: 0,
 		})
 	}
 
@@ -147,11 +149,12 @@ func (c *conversationService) AddMembers(conversationID string, userIDs []string
 
 		if !existingUserMap[userID] {
 			newUser := models.Users{
-				UserID:   user.ID,
-				Fullname: user.FullName,
-				Avatar:   user.Avatar,
-				Username: user.Username,
-				Added_at: time.Now().UTC(),
+				UserID:      user.ID,
+				Fullname:    user.FullName,
+				Avatar:      user.Avatar,
+				Username:    user.Username,
+				Added_at:    time.Now().UTC(),
+				UnreadCount: 0,
 			}
 			newUsers = append(newUsers, newUser)
 		}
@@ -219,6 +222,7 @@ func (cs *conversationService) SendMessage(conversationID, userID string, conten
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 		Status:    "sent",
+		Unread:    true,
 	}
 
 	// Lưu tin nhắn vào database
@@ -237,4 +241,17 @@ func (s *conversationService) GetMessages(conversationID string) ([]models.Chat,
 
 func (s *conversationService) MarkMessageAsDeleted(conversationID string, messageID string) error {
 	return s.repo.MarkMessageAsDeleted(conversationID, messageID)
+}
+
+func (cs *conversationService) MarkMessagesAsRead(conversationID string, userID string) error {
+	if conversationID == "" || userID == "" {
+		return errors.New("missing conversationID or userID")
+	}
+
+	err := cs.repo.MarkMessagesAsRead(conversationID, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
