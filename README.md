@@ -153,3 +153,135 @@
 
     - Người dùng có thể chọn từ danh sách kết quả và gửi lời mời kết bạn.
 
+
+<h3>Quy trình tạo bài viết:</h3>
+- Mô tả: Người dùng có thể tạo, đọc, cập nhật và xóa bài viết của mình.
+
+- Quy trình:
+
+   1 Người dùng cần đăng nhập tài khoản của mình:
+
+    - Người dùng cần hoàn tất quy trình đăng nhập tài khoản cá nhân.
+    - Sau khi hoàn tất đăng nhập hệ thống sẽ chuyển hướng người dùng đến trang 
+      
+   2 Người dùng chọn chức năng tạo bài viết.:
+
+    - Ở dầu trang Home có chức năng tạo bài viết mới.
+    - Khi nhấn vào sẽ hiễn thi toàn bộ chức năng của tạo bài viết mới 
+      
+   3 Nhập nội dung bài viết và các tùy chọn (hình ảnh, tag, v.v.).
+
+    - Người dùng có thể nhập thông tin bài viết
+    - Đăng kèm với hình ảnh hoặc không đều được
+  
+   4 Nhấn chọn xác nhận đăng bài viết.
+  
+   5 Hệ thống lưu bài viết vào cơ sở dữ liệu.
+
+   6 Sau khi hoàn tất đăng bài. bài viết sẽ được hiển thị lên trang new Feed.
+
+   7 Người dùng có thể chỉnh sửa hoặc xóa bài viết đã tạo.
+  
+     - Người dùng có thể xem lại thông tin bài viết của mình ở trang cá nhân
+     - Chọn vào bài viết và có thể sửa nội dung bài viết hoặc xóa bài viết 
+   
+
+<h3>Quy trình bình luận:</h3>
+- Mô tả: Người dùng có thể bình luận về các bài viết.
+
+- Quy trình:
+
+   1 Người dùng cần đăng nhập tài khoản của mình:
+
+    - Người dùng cần hoàn tất quy trình đăng nhập tài khoản cá nhân.
+    - Sau khi hoàn tất đăng nhập hệ thống sẽ chuyển hướng người dùng đến trang 
+      
+   2 Người dùng chọn bài viết muốn bình luận.
+  
+    - Người dùng khi đang xem danh sách bài viết mới hay của bạn bè.
+    - Muốn dể lại bình luận cho bài viết
+    - Chọn vào bài viết đấy.
+    - Chọn chức năng bình luận ở bên phải của bài viết.
+      
+   3 Nhập nội dung bình luận..
+
+    - Người dùng có thể nhập nội dung bình luận về bài viết
+    - Có thẻ Đính kèm với hình ảnh hoặc không đều được
+  
+   4 Hệ thống lưu bình luận và hiển thị dưới bài viết.
+  
+   5 Người dùng có thể chỉnh sửa hoặc xóa bình luận của mình.
+  
+    - Người dùng có thể xem lại thông tin bình luận của mình khi chọn vào bài viết ấy
+    - Hoặc có thể xem lại các bài viết đã bình luận ở chức năng quản lí hoạt dộng.
+    - Có thể chỉnh sửa hoặc xóa bình luận của bản thân.
+      
+<h3>Quy trình chia sẻ bài viết</h3>
+- Mô tả: Người dùng có thể chia sẻ bài viết của mình hoặc của người khác lên dòng thời gian cá nhân.
+
+- Quy trình:
+
+   1 Người dùng cần đăng nhập tài khoản của mình:
+
+    - Người dùng cần hoàn tất quy trình đăng nhập tài khoản cá nhân.
+    - Sau khi hoàn tất đăng nhập hệ thống sẽ chuyển hướng người dùng đến trang 
+      
+   2 Người dùng chọn bài viết muốn chia sẻ.
+  
+    - Người dùng khi đang xem danh sách bài viết mới hay của bạn bè.
+    - Muốn chia sẽ bài viết dể bạn bè của mình được thấy.
+    - Chọn vào bài viết đấy.
+    - Chọn chức năng chia  ở bên phải của bài viết.
+      
+   3 Nhập nội dung status khi chia sẽ.
+
+    - Người dùng có thể nhập nội dung giới thiệu về bài viết
+  
+   4 Chọn phương thức chia sẻ
+
+    - Chia sẽ về trang cá nhân của mình
+    - Hay gửi cho bạn bè thông qua tin
+
+   5 Hệ thống Lưu trạng thái chia sẽ bài viết.
+  
+   6 Hệ thống hiển thị bài viết đã được chia sẻ trên nền tảng.
+  
+    - Người dùng có thể xem lại các bài viết mình đã chia sẽ ở trang cá nhân bản thân.
+    - Hoặc có thể xem lại các bài viết đã chia sẽ ở chức năng quản lí hoạt dộng.
+  
+   7 Người dùng có thể thay đổi status bài đăng hoặc xóa đi.
+
+
+<h3>Quy trình theo dõi</h3>
+- Mô tả: Người dùng có thể theo dõi những người dùng khác để nhận thông báo về hoạt động của họ.
+
+- Quy trình:
+
+   1 Người dùng cần đăng nhập tài khoản của mình:
+
+    - Người dùng cần hoàn tất quy trình đăng nhập tài khoản cá nhân.
+    - Sau khi hoàn tất đăng nhập hệ thống sẽ chuyển hướng người dùng đến trang 
+      
+   2 Người dùng tìm kiếm..
+  
+    - Người dùng có thể tìm kiếm theo tên, gmail, username
+    - Khi hệ thống trả về kết quả có thể chọn người dùng mà mình cần 
+
+      
+   3 chọn người dùng muốn theo dõi.
+
+    - Khi chọn sẽ chuyển đến trang giới thiệu người dùng.
+    - Tại dây hiển thị thông tin người dùng (họ tên, số lượt follower, following), danh sách bạn bè chung, ...)
+  
+   4 Nhấn nút "Theo dõi".
+  
+   5 Hệ thống ghi nhận vào cơ sỏ dữ liệu.
+
+   6 Hệ thống cập nhật danh sách theo dõi và thông báo cho người dùng.
+
+   7 Chuyển dổi thành Friend
+
+     - Khi một người dùng follow người khác.
+     - Khi một người bạn đang follow vào trang cá nhân của bạn. Hệ thông sẽ kiểm tra mỗi quan hệ của cả hai nếu đối phương đang follow bạn sẽ hiện follow back.
+     - Khi người dùng nhấn vào follow back hệ thống sẽ cập nhật lại trạng thái của cả 2 thành friend
+   
