@@ -311,7 +311,7 @@
    6 Hệ thống cập nhật danh sách theo dõi và thông báo cho người dùng.
 
    7 Chuyển dổi thành Friend
-
+ 
      - Khi một người dùng follow người khác.
      - Khi một người bạn đang follow vào trang cá nhân của bạn. Hệ thông sẽ kiểm tra mỗi quan hệ của cả hai nếu đối phương đang follow bạn sẽ hiện follow back.
      - Khi người dùng nhấn vào follow back hệ thống sẽ cập nhật lại trạng thái của cả 2 thành friend
