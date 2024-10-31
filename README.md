@@ -284,4 +284,35 @@
      - Khi một người dùng follow người khác.
      - Khi một người bạn đang follow vào trang cá nhân của bạn. Hệ thông sẽ kiểm tra mỗi quan hệ của cả hai nếu đối phương đang follow bạn sẽ hiện follow back.
      - Khi người dùng nhấn vào follow back hệ thống sẽ cập nhật lại trạng thái của cả 2 thành friend
-   
+ 
+<h3>Quy trình Nhắn Tin</h3>
+- Mô tả: Người dùng có thể nhắn tin cho bạn bè hoặc những người theo dõi họ. Quy trình này cho phép gửi, nhận, chỉnh sửa và xóa tin nhắn.
+- Quy trình:
+   1 Người dùng cần đăng nhập tài khoản của mình:
+
+    - Người dùng cần hoàn tất quy trình đăng nhập tài khoản cá nhân.
+    - Sau khi hoàn tất đăng nhập hệ thống sẽ chuyển hướng người dùng đến trang 
+      
+   2 Người dùng tìm kiếm..
+  
+    - Người dùng có thể tìm kiếm theo tên, gmail, username
+    - Khi hệ thống trả về kết quả có thể chọn người dùng mà mình cần 
+
+      
+   3 chọn người dùng muốn theo dõi.
+
+    - Khi chọn sẽ chuyển đến trang giới thiệu người dùng.
+    - Tại dây hiển thị thông tin người dùng (họ tên, số lượt follower, following), danh sách bạn bè chung, ...)
+  
+   4 Nhấn nút "Theo dõi".
+  
+   5 Hệ thống ghi nhận vào cơ sỏ dữ liệu.
+
+   6 Hệ thống cập nhật danh sách theo dõi và thông báo cho người dùng.
+
+   7 Chuyển dổi thành Friend
+
+     - Khi một người dùng follow người khác.
+     - Khi một người bạn đang follow vào trang cá nhân của bạn. Hệ thông sẽ kiểm tra mỗi quan hệ của cả hai nếu đối phương đang follow bạn sẽ hiện follow back.
+     - Khi người dùng nhấn vào follow back hệ thống sẽ cập nhật lại trạng thái của cả 2 thành friend
+ 
