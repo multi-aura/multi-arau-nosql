@@ -287,32 +287,41 @@
  
 <h3>Quy trình Nhắn Tin</h3>
 - Mô tả: Người dùng có thể nhắn tin cho bạn bè hoặc những người theo dõi họ. Quy trình này cho phép gửi, nhận, chỉnh sửa và xóa tin nhắn.
-- Quy trình:
-   1 Người dùng cần đăng nhập tài khoản của mình:
-
-    - Người dùng cần hoàn tất quy trình đăng nhập tài khoản cá nhân.
-    - Sau khi hoàn tất đăng nhập hệ thống sẽ chuyển hướng người dùng đến trang 
-      
-   2 Người dùng tìm kiếm..
+   Quy trình chi tiết:
+   
+   Người dùng đăng nhập:
+   Người dùng cần hoàn tất quy trình đăng nhập tài khoản cá nhân.
+   Sau khi đăng nhập, hệ thống chuyển hướng người dùng đến trang chính của ứng dụng.
+   
+   Tìm kiếm người dùng:
+   Người dùng có thể sử dụng thanh tìm kiếm để tìm kiếm bạn bè hoặc người dùng khác bằng cách nhập tên, email hoặc username.
+   Hệ thống truy vấn cơ sở dữ liệu và hiển thị danh sách người dùng phù hợp với từ khóa tìm kiếm.
+   
+   Chọn người dùng để nhắn tin:
+   Người dùng chọn một người từ danh sách tìm kiếm để mở cuộc trò chuyện.
+   Hệ thống chuyển đến trang trò chuyện với người dùng đã chọn.
+   
+   Nhập nội dung tin nhắn:
+   Người dùng nhập nội dung tin nhắn vào ô nhập liệu.
+   Người dùng có thể đính kèm hình ảnh hoặc tập tin nếu cần.
+   
+   Gửi tin nhắn:
+   Người dùng nhấn nút "Gửi" để gửi tin nhắn.
+   Hệ thống lưu tin nhắn vào cơ sở dữ liệu và hiển thị tin nhắn trong cuộc trò chuyện.
   
-    - Người dùng có thể tìm kiếm theo tên, gmail, username
-    - Khi hệ thống trả về kết quả có thể chọn người dùng mà mình cần 
-
-      
-   3 chọn người dùng muốn theo dõi.
-
-    - Khi chọn sẽ chuyển đến trang giới thiệu người dùng.
-    - Tại dây hiển thị thông tin người dùng (họ tên, số lượt follower, following), danh sách bạn bè chung, ...)
-  
-   4 Nhấn nút "Theo dõi".
-  
-   5 Hệ thống ghi nhận vào cơ sỏ dữ liệu.
-
-   6 Hệ thống cập nhật danh sách theo dõi và thông báo cho người dùng.
-
-   7 Chuyển dổi thành Friend
- 
-     - Khi một người dùng follow người khác.
-     - Khi một người bạn đang follow vào trang cá nhân của bạn. Hệ thông sẽ kiểm tra mỗi quan hệ của cả hai nếu đối phương đang follow bạn sẽ hiện follow back.
-     - Khi người dùng nhấn vào follow back hệ thống sẽ cập nhật lại trạng thái của cả 2 thành friend
- 
+   Nhận tin nhắn:
+   Hệ thống theo dõi và hiển thị các tin nhắn mới từ người dùng khác trong thời gian thực.
+   Người dùng nhận thông báo khi có tin nhắn mới.
+   Chỉnh sửa hoặc xóa tin nhắn:
+   
+   Người dùng có thể chọn tin nhắn đã gửi để chỉnh sửa hoặc xóa.
+   Hệ thống sẽ cập nhật cơ sở dữ liệu và giao diện người dùng theo hành động của người dùng.
+   Lưu trữ cuộc trò chuyện:
+   
+   Tất cả các cuộc trò chuyện được lưu trữ trong cơ sở dữ liệu để người dùng có thể truy cập lại sau này.
+   Người dùng có thể xem lịch sử trò chuyện bằng cách truy cập vào danh sách cuộc trò chuyện.
+   Đóng cuộc trò chuyện:
+   
+   Người dùng có thể chọn để đóng cuộc trò chuyện khi không còn muốn tương tác nữa.
+   Hệ thống sẽ cập nhật trạng thái cuộc trò chuyện và cho phép người dùng mở lại khi cần.
+    
