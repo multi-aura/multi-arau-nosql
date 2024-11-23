@@ -4,7 +4,6 @@ import './SidebarChat.css';
 import { FaSearch } from 'react-icons/fa';
 
 function SidebarChat({ conversations = [], onSelectChat, newMessageItems }) {
-  console.log(conversations);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('All'); // All, Group, Single

@@ -17,12 +17,12 @@ func SetupConversationRoutes(app *fiber.App) {
 
 	conversation := app.Group("/conversation")
 	conversation.Get("/get-user-conversations/:userID", controller.GetListConversation)
-	conversation.Get("detais-coversation/:conversationID/:userID", controller.GetConversationByID)
+	conversation.Get("/detais-coversation/:conversationID/:userID", controller.GetConversationByID)
 	conversation.Post("/create-conversation", controller.CreateConversation)
 	conversation.Post("/add-member-message/:conversationID", controller.AddMember)
 	conversation.Delete("/remove-member-conversation/:conversationID/:userID", controller.RemoveMemberConversation)
 	conversation.Post("/send-message/:conversationID", controller.SendMessage)
 	conversation.Get("/get-conversation-messages/:conversationID", controller.GetMessages)
-	conversation.Put("/delete-message/:conversationID/:messageID", controller.MarkMessageAsDeleted)
+	conversation.Delete("/delete-message/:conversationID/:messageID", controller.MarkMessageAsDeleted)
 
 }

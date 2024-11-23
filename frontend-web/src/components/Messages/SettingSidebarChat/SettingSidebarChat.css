@@ -1,0 +1,177 @@
+.setting-sidebar-chat {
+  width: 30%; /* Sidebar chiếm 30% chiều rộng */
+  max-width: 400px; /* Chiều rộng tối đa */
+  height: 100%; /* Chiều cao khớp với khung chat */
+  background-color: #000; /* Nền màu đen */
+  color: #fff; /* Màu chữ trắng */
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 10px rgba(0, 0, 0, 0.5); /* Bóng đổ nhẹ */
+  z-index: 1050;
+  overflow-y: auto; /* Cuộn khi nội dung dài */
+  padding: 10px;
+}
+
+.setting-sidebar-chat .header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #333; /* Đường kẻ chia màu tối */
+}
+
+.setting-sidebar-chat .header img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%; /* Bo tròn ảnh */
+  margin-bottom: 10px;
+  border: 2px solid #007bff; /* Viền xanh nhạt */
+}
+
+.setting-sidebar-chat .header h3 {
+  font-size: 18px;
+  margin: 5px 0;
+  color: #4caf50; /* Màu xanh lá nhạt */
+}
+
+.setting-sidebar-chat .header .actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.setting-sidebar-chat .header .actions button {
+  background-color: #1c1c1c; /* Màu nền nút tối */
+  border: none;
+  color: #fff; /* Màu chữ nút trắng */
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.setting-sidebar-chat .header .actions button:hover {
+  background-color: #333; /* Màu khi hover */
+}
+
+.setting-sidebar-chat .section {
+  margin-top: 20px;
+}
+
+.setting-sidebar-chat .section-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #333; /* Đường kẻ chia màu tối */
+  padding-bottom: 5px;
+  color: #fff; /* Màu trắng */
+}
+
+.setting-sidebar-chat .media-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.setting-sidebar-chat .media-grid img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 2px solid #333; /* Viền màu tối */
+}
+
+.setting-sidebar-chat .file-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.setting-sidebar-chat .file-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #333; /* Đường kẻ chia màu tối */
+}
+
+.setting-sidebar-chat .file-list li .file-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setting-sidebar-chat .file-list li .file-name span {
+  font-size: 14px;
+  color: #fff; /* Màu chữ tệp trắng */
+}
+
+.setting-sidebar-chat .file-list li .file-date {
+  font-size: 12px;
+  color: #888; /* Màu chữ ngày nhạt */
+}
+
+.setting-sidebar-chat .view-all-btn {
+  text-align: center;
+  padding: 10px;
+  background-color: #1c1c1c; /* Màu nền nút tối */
+  border-radius: 5px;
+  margin-top: 10px;
+  cursor: pointer;
+  color: #fff; /* Màu chữ trắng */
+  transition: background-color 0.3s ease;
+}
+
+.setting-sidebar-chat .view-all-btn:hover {
+  background-color: #333; /* Màu khi hover */
+}
+.setting-sidebar-chat .actions button,
+.setting-sidebar-chat .section-title,
+.setting-sidebar-chat .file-name span {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Khoảng cách giữa icon và text */
+}
+
+.setting-sidebar-chat .actions button {
+  background-color: #1e1e1e;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.setting-sidebar-chat .actions button:hover {
+  background-color: #333;
+}
+
+.setting-sidebar-chat .section-title {
+  font-weight: bold;
+  color: white;
+}
+
+.setting-sidebar-chat .file-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setting-sidebar-chat .footer button {
+  background-color: #1e1e1e;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.setting-sidebar-chat .footer button:hover {
+  background-color: #333;
+}

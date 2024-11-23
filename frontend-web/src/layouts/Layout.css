@@ -11,7 +11,6 @@
 }
 
 .content-area {
-  padding: 20px;
   background-color: black; /* Màu nền đen tối */
   color: #fff; /* Màu chữ trắng */
   flex-grow: 1;
