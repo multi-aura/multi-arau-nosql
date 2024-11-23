@@ -115,7 +115,6 @@ func (cc *ConversationController) GetListConversation(c *fiber.Ctx) error {
 }
 func (cc *ConversationController) AddMember(c *fiber.Ctx) error {
 	conversationID := c.Params("conversationID")
-
 	var req struct {
 		UserID []string `json:"user_id" bson:"user_id" form:"user_id"`
 	}

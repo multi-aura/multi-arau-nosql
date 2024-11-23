@@ -20,7 +20,15 @@
 .left-section {
   display: flex;
   align-items: center;
+}.menu-icon {
+  color: #fff; /* Màu trắng mặc định */
+  transition: color 0.3s ease; /* Hiệu ứng mượt */
 }
+
+.menu-icon.active {
+  color: red; /* Màu đỏ khi sidebar mở */
+}
+
 
 .avatar {
   width: 50px;

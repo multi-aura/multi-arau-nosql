@@ -3,8 +3,15 @@ import ChatHeader from '../ChatHeader/ChatHeader';
 import MessageBubble from '../MessageBubble/MessageBubble';
 import ChatInput from '../ChatInput/ChatInput';
 import './ChatContent.css';
-
-const ChatContent = ({ chat, messages, onSendMessage, currentUserID }) => {
+const ChatContent = ({
+  chat, // Prop chứa thông tin chat hiện tại
+  messages,
+  onSendMessage,
+  currentUserID,
+  onToggleSidebar, // Hàm bật/tắt sidebar
+  isSidebarOpen, // Trạng thái sidebar
+  userData // Dữ liệu người dùng
+}) => {
   const messageEndRef = useRef(null); // Tạo tham chiếu để cuộn đến cuối
 
   // Tự động cuộn xuống cuối khi có tin nhắn mới
@@ -26,17 +33,20 @@ const ChatContent = ({ chat, messages, onSendMessage, currentUserID }) => {
 
   return (
     <div className="chat-content">
-      <ChatHeader user={chat} />
+      <ChatHeader
+        user={chat}
+        currentUserID={userData.userID}
+        onToggleSidebar={onToggleSidebar} // Truyền hàm bật/tắt sidebar
+        isSidebarOpen={isSidebarOpen} // Trạng thái sidebar
+      />
+
       <div className="chat-messages">
         {messages.length > 0 ? (
           messages.map((message, index) => {
-            // Kiểm tra tin nhắn trước và tin nhắn tiếp theo
             const previousMessage = messages[index - 1];
             const nextMessage = messages[index + 1];
             const isSameSenderAsPrevious = previousMessage && previousMessage.sender.userID === message.sender.userID;
             const isLastMessageFromSameSender = !nextMessage || nextMessage.sender.userID !== message.sender.userID;
-
-            // Hiển thị tên người gửi nếu là tin nhắn đầu tiên trong chuỗi của họ
             const showSenderInfo = !isSameSenderAsPrevious;
 
             return (
@@ -45,8 +55,8 @@ const ChatContent = ({ chat, messages, onSendMessage, currentUserID }) => {
                 message={message}
                 userAvatar={message.sender?.avatar || 'default-avatar.png'}
                 currentUserID={currentUserID}
-                showSenderInfo={showSenderInfo} // Hiển thị tên người gửi khi cần
-                showTime={isLastMessageFromSameSender} // Hiển thị thời gian cho tin nhắn cuối cùng trong chuỗi
+                showSenderInfo={showSenderInfo}
+                showTime={isLastMessageFromSameSender}
               />
             );
           })
@@ -57,7 +67,6 @@ const ChatContent = ({ chat, messages, onSendMessage, currentUserID }) => {
             </p>
           </div>
         )}
-        {/* Phần tử trống để cuộn tới */}
         <div ref={messageEndRef} />
       </div>
       <ChatInput onSendMessage={handleSendMessage} />

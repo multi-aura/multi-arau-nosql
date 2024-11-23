@@ -123,5 +123,39 @@
 .chat-messages::-webkit-scrollbar-thumb:hover {
   background-color: #555; /* Màu tay kéo khi hover */
 }
+.chat-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 
+.chat-content-wrapper {
+  display: flex;
+  flex-grow: 1; /* Nội dung chat chiếm tối đa không gian còn lại */
+}
+
+.chat-content {
+  flex: 1; /* Mặc định chat chiếm 100% */
+
+  transition: flex 0.3s ease; /* Hiệu ứng co dãn mượt */
+}
+
+.chat-content.shrink-content {
+  flex: 0.7; /* Khi sidebar mở, chat thu nhỏ còn 70% */
+}
+
+.setting-sidebar-chat {
+  flex: 0.3; /* Sidebar chiếm 30% */
+  max-width: 400px; /* Đặt chiều rộng tối đa cho sidebar */
+  background-color: #222;
+  color: white;
+  padding: 20px;
+  transition: transform 0.3s ease-in-out;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+  z-index: 1050;
+}
+
+.setting-sidebar-chat.visible {
+  transform: translateX(0); /* Hiển thị sidebar */
+}
 
